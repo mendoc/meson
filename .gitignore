@@ -1,0 +1,29 @@
+# ── Python ────────────────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.pyo
+.venv/
+venv/
+.env
+
+# ── Sorties générées ──────────────────────────────────────────────────────────
+output/*
+!output/.gitkeep
+
+# ── PDFs sources (ouvrages sous droits, ne pas versionner) ───────────────────
+input/*
+!input/.gitkeep
+
+# ── Polices (télécharger séparément) ─────────────────────────────────────────
+fonts/*
+!fonts/.gitkeep
+
+# ── OS ────────────────────────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+
+# ── IDE ───────────────────────────────────────────────────────────────────────
+.idea/
+.vscode/
+*.swp
+*.swo

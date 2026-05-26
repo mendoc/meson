@@ -1,0 +1,15 @@
+services:
+  meson:
+    build: .
+    env_file:
+      - .env                        # LLM_API_KEY et overrides de config.py
+    volumes:
+      - .:/app                      # code source (rechargement à chaud en dev)
+      - ./input:/app/input          # PDFs sources à traduire
+      - ./output:/app/output        # PDFs et images générés
+      - ./fonts:/app/fonts          # polices système (Garamond, etc.)
+      - fonts_cache:/root/.cache    # cache fontconfig persistant entre les runs
+    command: ["--help"]             # remplacer par : <source.pdf> <titre> <auteur>
+
+volumes:
+  fonts_cache:
