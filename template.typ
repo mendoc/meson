@@ -1,6 +1,7 @@
 #let projet-meson(
   titre: "Titre de l'Ouvrage Original",
   auteur: "Nom de l'Auteur",
+  police: ("Crimson Pro", "Linux Libertine", "DejaVu Serif"),
   body
 ) = {
   // 1. Configuration de la page (Format Roman / Standard Édition)
@@ -18,7 +19,7 @@
 
   // 2. Configuration du texte et du "Gris Typographique"
   set text(
-    font: "Garamond",
+    font: police,
     size: 11pt,
     lang: "fr",
   )
@@ -29,15 +30,15 @@
     first-line-indent: 1.25em,
   )
 
-  // 3. Contrôle des accidents visuels (Veuves et Orphelines)
-  set par(orphan-mention: 2)
+  // 3. Contrôle veuves/orphelines (via block breakable: false sur les courts blocs)
+  set block(breakable: true)
 
   // 4. Page d'avertissement légale obligatoire (Spécification Méson)
   page(numbering: none)[
-    #set text(font: "Arial", size: 10pt)
+    #set text(font: ("EB Garamond", "Linux Libertine", "DejaVu Serif"), size: 10pt)
     #set par(first-line-indent: 0pt)
     #align(center + horizon)[
-      #block(width: 80%, stroke: 0.5pt + luma(120), inset: 2em, radius: 4pt)[
+      #block(width: 92%, stroke: 0.5pt + luma(120), inset: 2em, radius: 4pt)[
         *AVERTISSEMENT DE TRADUCTION*
         #v(1em)
         Cet ouvrage est une traduction automatique réalisée par l'agent de recherche et
@@ -58,4 +59,4 @@
 }
 
 // Initialisation par le script principal
-#show: projet-meson.with(titre: "Titre Ouvrage Target", auteur: "Auteur Target")
+#show: projet-meson.with(titre: "Titre Ouvrage Target", auteur: "Auteur Target", police: ("Crimson Pro", "Linux Libertine", "DejaVu Serif"))

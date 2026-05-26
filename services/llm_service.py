@@ -1,3 +1,5 @@
+import re
+
 from models.page import PageContext
 
 SYSTEM_PROMPT = """\
@@ -23,11 +25,12 @@ Tu vas recevoir trois blocs de texte issus d'une analyse OCR :
 
 2. DIRECTIVES MICRO-TYPOGRAPHIQUES (FRANÇAIS)
 Applique les règles du Code Typographique de l'Imprimerie Nationale :
-- Insère une espace fine insécable avant les ponctuations doubles fixes : [!, ?, ;].
-- Insère une espace forte insécable avant [:] et à l'intérieur des guillemets français
-  [« et »].
-- Lie les nombres et leurs unités par une espace insécable (ex: "180 kg", "XXe siècle").
+- Espace fine insécable (U+202F) avant : !, ?, ; — insère le caractère Unicode directement.
+- Espace forte insécable (U+00A0, soit ~ en Typst) avant : et à l'intérieur de « ».
+- Lie les nombres et leurs unités avec ~ (ex: "180~kg", "XXe~siècle").
 - Accentue obligatoirement les majuscules (À, É, È, Ç, Œ).
+- N'utilise JAMAIS #sym.nbsp ni #sym.space ni aucune référence au module sym pour les
+  espaces typographiques. Insère les caractères Unicode directement dans le texte.
 
 3. DIRECTIVES DE FORMATAGE EN CODE TYPST
 Génère un code Typst pur et standardisé. Applique les structures suivantes selon la
@@ -50,6 +53,22 @@ Génère UNIQUEMENT le code Typst correspondant à la traduction de TEXTE_CIBLE.
 commence pas ta réponse par des salutations, n'inclus aucun texte explicatif avant ou
 après le code. Renvoie directement le bloc de code Typst.\
 """
+
+
+def _strip_code_fences(text: str) -> str:
+    text = text.strip()
+    text = re.sub(r'^```(?:typst)?\n', '', text)
+    text = re.sub(r'\n```$', '', text)
+    return _sanitize_typst(text.strip())
+
+
+def _sanitize_typst(text: str) -> str:
+    # Remplace les variantes #sym.nbsp par les caractères Unicode corrects
+    text = text.replace('#sym.nbsp.narrow', ' ')
+    text = text.replace('#sym.space.nobreak.narrow', ' ')
+    text = text.replace('#sym.space.nobreak', ' ')
+    text = re.sub(r'#sym\.nbsp\b', ' ', text)
+    return text
 
 
 class LLMService:
@@ -75,7 +94,7 @@ class LLMService:
             system=SYSTEM_PROMPT,
             messages=[{"role": "user", "content": self._build_user_message(context)}],
         )
-        return response.content[0].text
+        return _strip_code_fences(response.content[0].text)
 
     def _build_user_message(self, context: PageContext) -> str:
         return (

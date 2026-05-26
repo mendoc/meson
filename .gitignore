@@ -6,6 +6,9 @@ __pycache__/
 venv/
 .env
 
+# ── Base de données des sessions ──────────────────────────────────────────────
+translations.db
+
 # ── Sorties générées ──────────────────────────────────────────────────────────
 output/*
 !output/.gitkeep

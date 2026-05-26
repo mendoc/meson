@@ -15,7 +15,7 @@ class SemanticTranslator:
     def translate(self, context: PageContext) -> str:
         """Traduit la page cible et retourne le code Typst correspondant."""
         typst_code = self.llm.compose(context)
-        missing = check_technical_terms(typst_code)
+        missing = check_technical_terms(context.text, typst_code)
         if missing:
-            print(f"[WARN] Page {context.page_number} — termes potentiellement perdus : {missing}")
+            print(f"[WARN] Page {context.page_number} — termes techniques perdus : {missing}")
         return typst_code

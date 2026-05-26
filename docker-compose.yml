@@ -1,15 +1,32 @@
 services:
+
+  # ── Interface web ──────────────────────────────────────────────────
+  web:
+    build: .
+    command: uvicorn web.app:app --host 0.0.0.0 --port 8000 --reload
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      - .:/app                    # code source (rechargement à chaud)
+      - ./input:/app/input        # PDFs sources
+      - ./output:/app/output      # PDFs générés
+      - ./fonts:/app/fonts        # polices (Garamond, etc.)
+      - fonts_cache:/root/.cache  # cache fontconfig
+
+  # ── Pipeline CLI ───────────────────────────────────────────────────
   meson:
     build: .
     env_file:
-      - .env                        # LLM_API_KEY et overrides de config.py
+      - .env
     volumes:
-      - .:/app                      # code source (rechargement à chaud en dev)
-      - ./input:/app/input          # PDFs sources à traduire
-      - ./output:/app/output        # PDFs et images générés
-      - ./fonts:/app/fonts          # polices système (Garamond, etc.)
-      - fonts_cache:/root/.cache    # cache fontconfig persistant entre les runs
-    command: ["--help"]             # remplacer par : <source.pdf> <titre> <auteur>
+      - .:/app
+      - ./input:/app/input
+      - ./output:/app/output
+      - ./fonts:/app/fonts
+      - fonts_cache:/root/.cache
+    command: ["--help"]           # remplacer par : <source.pdf> <titre> <auteur>
 
 volumes:
   fonts_cache:

@@ -1,7 +1,7 @@
 import sys
 from pathlib import Path
 
-from config import LLM_API_KEY, LLM_MODEL, OUTPUT_DIR, IMAGES_DIR, TYPST_TEMPLATE
+from config import LLM_API_KEY, LLM_MODEL, OUTPUT_DIR, IMAGES_DIR, TYPST_TEMPLATE, FONTS, DEFAULT_FONT
 from agents.page_extractor import PageExtractor
 from agents.image_extractor import ImageExtractor
 from agents.translator import SemanticTranslator
@@ -10,9 +10,11 @@ from models.page import TranslatedPage
 from services.llm_service import LLMService
 
 
-def run(source_pdf: Path, titre: str, auteur: str) -> None:
+def run(source_pdf: Path, titre: str, auteur: str, police_slug: str = DEFAULT_FONT) -> None:
     OUTPUT_DIR.mkdir(exist_ok=True)
     IMAGES_DIR.mkdir(exist_ok=True)
+
+    police = FONTS.get(police_slug, FONTS[DEFAULT_FONT])
 
     llm = LLMService(api_key=LLM_API_KEY, model=LLM_MODEL)
     page_extractor = PageExtractor(source_pdf)
@@ -39,12 +41,14 @@ def run(source_pdf: Path, titre: str, auteur: str) -> None:
         ))
 
     print("Assemblage et compilation Typst…")
-    output_pdf = composer.assemble(translated_pages, titre=titre, auteur=auteur)
+    output_pdf = composer.assemble(translated_pages, titre=titre, auteur=auteur, police=police)
     print(f"PDF généré : {output_pdf}")
 
 
 if __name__ == "__main__":
     if len(sys.argv) < 4:
-        print("Usage : python main.py <source.pdf> <titre> <auteur>")
+        print("Usage : python main.py <source.pdf> <titre> <auteur> [police]")
+        print(f"Polices disponibles : {', '.join(FONTS)}")
         sys.exit(1)
-    run(Path(sys.argv[1]), titre=sys.argv[2], auteur=sys.argv[3])
+    police_slug = sys.argv[4] if len(sys.argv) > 4 else DEFAULT_FONT
+    run(Path(sys.argv[1]), titre=sys.argv[2], auteur=sys.argv[3], police_slug=police_slug)

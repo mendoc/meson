@@ -20,13 +20,17 @@ def insert_french_spaces(text: str) -> str:
     return text
 
 
-def check_technical_terms(translated_text: str) -> list[str]:
+def check_technical_terms(source_text: str, translated_text: str) -> list[str]:
     """
-    Retourne les termes techniques du texte source qui n'apparaissent pas dans la traduction.
-    Utilisé comme garde-fou après la génération LLM (critère de recette §6.2).
+    Retourne les termes techniques présents dans le texte SOURCE qui ont disparu
+    de la traduction. Filtre les faux positifs sur les livres non techniques.
     """
-    lowered = translated_text.lower()
-    return [term for term in TECHNICAL_TERMS if term not in lowered]
+    lowered_src  = source_text.lower()
+    lowered_trad = translated_text.lower()
+    return [
+        term for term in TECHNICAL_TERMS
+        if term in lowered_src and term not in lowered_trad
+    ]
 
 
 def validate_major_accents(text: str) -> list[str]:
