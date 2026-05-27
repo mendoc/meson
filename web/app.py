@@ -1,3 +1,4 @@
+import re
 import shutil
 import sys
 from pathlib import Path
@@ -110,6 +111,30 @@ async def api_cache_clear(model: str | None = None):
     return {"deleted": n}
 
 
+def _parse_page_range(s: str, total: int) -> list[int]:
+    """Parse "1-3, 5, 8-9" → [1, 2, 3, 5, 8, 9] (1-based, clampé sur total)."""
+    pages: set[int] = set()
+    for part in s.split(','):
+        part = part.strip()
+        m = re.fullmatch(r'(\d+)-(\d+)', part)
+        if m:
+            a, b = int(m[1]), int(m[2])
+            pages.update(range(min(a, b), max(a, b) + 1))
+        elif re.fullmatch(r'\d+', part):
+            pages.add(int(part))
+    return sorted(p for p in pages if 1 <= p <= total)
+
+
+@app.post("/api/inspect")
+async def api_inspect(file: UploadFile):
+    import fitz
+    content = await file.read()
+    doc = fitz.open(stream=content, filetype="pdf")
+    count = doc.page_count
+    doc.close()
+    return {"page_count": count}
+
+
 @app.get("/api/translations")
 async def api_list():
     return list_all()
@@ -131,12 +156,13 @@ async def api_translate(
     auteur: str = Form(...),
     police: str = Form("crimson_pro"),
     theme: str = Form("standard"),
+    page_range: str = Form(""),
 ):
     dest = UPLOADS_DIR / file.filename
     with dest.open("wb") as f:
         shutil.copyfileobj(file.file, f)
-    tid = create(titre, auteur, file.filename, police, theme)
-    background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police, theme)
+    tid = create(titre, auteur, file.filename, police, theme, page_range or None)
+    background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police, theme, page_range)
     return {"id": tid}
 
 
@@ -171,7 +197,8 @@ async def api_output(tid: int):
 
 
 def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
-                  police_slug: str = "crimson_pro", theme_slug: str = "standard") -> None:
+                  police_slug: str = "crimson_pro", theme_slug: str = "standard",
+                  page_range: str = "") -> None:
     try:
         import config
         from agents.image_extractor import ImageExtractor
@@ -196,15 +223,23 @@ def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
 
         extractor.load()
         total = extractor.page_count()
+
+        # Résoudre la plage : chaîne vide = toutes les pages
+        selected = _parse_page_range(page_range, total) if page_range.strip() else list(range(1, total + 1))
+        if not selected:
+            selected = list(range(1, total + 1))
+        range_size = len(selected)
+
         update(tid, page_count=total)
 
         pages: list[TranslatedPage] = []
-        for n in range(total):
+        for i, p in enumerate(selected):
+            n = p - 1  # 0-based index
             ctx = extractor.extract_context(n)
             illustrations = img_extractor.extract(source_pdf, n)
             typst_code = translator.translate(ctx)
             pages.append(TranslatedPage(page_number=n, typst_code=typst_code, illustrations=illustrations))
-            update(tid, status=f"processing:{n + 1}/{total}")
+            update(tid, status=f"processing:{i + 1}/{range_size}")
 
         police = config.FONTS.get(police_slug, config.FONTS[config.DEFAULT_FONT])
         theme  = config.THEMES.get(theme_slug, config.THEMES[config.DEFAULT_THEME])

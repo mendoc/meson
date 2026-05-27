@@ -31,6 +31,10 @@ def init_db() -> None:
             db.execute("ALTER TABLE translations ADD COLUMN theme TEXT NOT NULL DEFAULT 'standard'")
         except Exception:
             pass
+        try:
+            db.execute("ALTER TABLE translations ADD COLUMN page_range TEXT")
+        except Exception:
+            pass
         db.execute("""
             CREATE TABLE IF NOT EXISTS settings (
                 key   TEXT PRIMARY KEY,
@@ -51,11 +55,12 @@ def _conn():
 
 
 def create(titre: str, auteur: str, source_name: str,
-           police: str = "crimson_pro", theme: str = "standard") -> int:
+           police: str = "crimson_pro", theme: str = "standard",
+           page_range: str | None = None) -> int:
     with _conn() as db:
         cur = db.execute(
-            "INSERT INTO translations (titre, auteur, source_name, police, theme, created_at) VALUES (?, ?, ?, ?, ?, ?)",
-            (titre, auteur, source_name, police, theme, datetime.now().isoformat(timespec="seconds")),
+            "INSERT INTO translations (titre, auteur, source_name, police, theme, page_range, created_at) VALUES (?, ?, ?, ?, ?, ?, ?)",
+            (titre, auteur, source_name, police, theme, page_range, datetime.now().isoformat(timespec="seconds")),
         )
         return cur.lastrowid
 
