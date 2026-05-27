@@ -103,8 +103,9 @@
         Destiné exclusivement à un usage d'apprentissage personnel et d'accès au savoir.
       ]
     ]
+    // Reset à 0 ici : Typst incrémente à la coupure de page, donc la 1ère page du corps = 1.
+    #counter(page).update(0)
   ]
 
-  counter(page).update(1)
   body
 }
