@@ -11,7 +11,7 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from web.db import create, get, get_setting, init_db, list_all, set_setting, update
+from web.db import create, delete, get, get_setting, init_db, list_all, set_setting, update
 
 HERE = Path(__file__).parent
 app = FastAPI(title="Méson")
@@ -129,6 +129,24 @@ async def api_translate(
     tid = create(titre, auteur, file.filename, police, theme)
     background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police, theme)
     return {"id": tid}
+
+
+@app.delete("/api/translations/{tid}")
+async def api_delete(tid: int):
+    t = delete(tid)
+    if not t:
+        raise HTTPException(404)
+    for name in (t.get("output_name"), t.get("source_name")):
+        if not name:
+            continue
+        for folder in (OUTPUT_DIR, UPLOADS_DIR):
+            f = folder / name
+            if f.exists():
+                f.unlink()
+        typ = (OUTPUT_DIR / name).with_suffix(".typ")
+        if typ.exists():
+            typ.unlink()
+    return {"ok": True}
 
 
 @app.get("/api/output/{tid}")

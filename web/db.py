@@ -80,6 +80,17 @@ def list_all() -> list[dict]:
         return [dict(r) for r in rows]
 
 
+def delete(tid: int) -> dict | None:
+    """Supprime l'entrée et retourne ses champs (pour que l'appelant puisse nettoyer les fichiers)."""
+    with _conn() as db:
+        row = db.execute("SELECT * FROM translations WHERE id = ?", (tid,)).fetchone()
+        if not row:
+            return None
+        data = dict(row)
+        db.execute("DELETE FROM translations WHERE id = ?", (tid,))
+        return data
+
+
 def get_setting(key: str, default: str | None = None) -> str | None:
     with _conn() as db:
         row = db.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
