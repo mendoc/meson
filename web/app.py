@@ -27,6 +27,15 @@ def startup() -> None:
     init_db()
     UPLOADS_DIR.mkdir(exist_ok=True)
     OUTPUT_DIR.mkdir(exist_ok=True)
+    # Les tâches en cours au moment du redémarrage ne reprendront jamais —
+    # on les marque explicitement en erreur pour éviter les zombies infinis.
+    from web.db import _conn
+    with _conn() as db:
+        db.execute(
+            "UPDATE translations SET status = 'error', error = ? "
+            "WHERE status IN ('pending', 'processing')",
+            ("Interrompue lors du redémarrage du serveur.",)
+        )
 
 
 @app.get("/", response_class=HTMLResponse)
