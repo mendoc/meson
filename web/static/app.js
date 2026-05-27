@@ -1,7 +1,8 @@
 /* ── State ───────────────────────────────────────────────────────── */
-let selectedFile = null;
-let activeId     = null;
-let pollTimer    = null;
+let selectedFile    = null;
+let activeId        = null;
+let pollTimer       = null;
+let _prevPanelBeforeSettings = 'upload';
 
 /* ── DOM refs ────────────────────────────────────────────────────── */
 const $list       = document.getElementById('translationList');
@@ -18,12 +19,22 @@ const $police     = document.getElementById('police');
 const $theme      = document.getElementById('theme');
 const $submitBtn  = document.getElementById('submitBtn');
 const $retryBtn   = document.getElementById('retryBtn');
+const $btnSettings     = document.getElementById('btnSettings');
+const $settingsApiKey  = document.getElementById('settingsApiKey');
+const $settingsModel   = document.getElementById('settingsModel');
+const $settingsVerify  = document.getElementById('settingsVerifyBtn');
+const $settingsKeyStatus = document.getElementById('settingsKeyStatus');
+const $settingsKeyHint = document.getElementById('settingsKeyHint');
+const $settingsClearKey = document.getElementById('settingsClearKeyBtn');
+const $settingsSave    = document.getElementById('settingsSaveBtn');
+const $settingsCancel  = document.getElementById('settingsCancelBtn');
 
 const panels = {
   upload:   document.getElementById('panelUpload'),
   progress: document.getElementById('panelProgress'),
   viewer:   document.getElementById('panelViewer'),
   error:    document.getElementById('panelError'),
+  settings: document.getElementById('panelSettings'),
 };
 
 /* ── Panel switching (classList, pas .hidden) ────────────────────── */
@@ -232,6 +243,95 @@ $retryBtn.addEventListener('click', () => {
   activeId = null;
   showPanel('upload');
   checkSubmitReady();
+});
+
+/* ── Settings panel ──────────────────────────────────────────────── */
+async function loadSettings() {
+  const res = await fetch('/api/settings');
+  if (!res.ok) return;
+  const s = await res.json();
+
+  // Peupler le select modèles
+  $settingsModel.innerHTML = (s.models || []).map(m =>
+    `<option value="${esc(m.id)}"${m.id === s.model ? ' selected' : ''}>${esc(m.label)}</option>`
+  ).join('');
+
+  // Indicateur clé
+  $settingsApiKey.value = '';
+  $settingsApiKey.placeholder = s.has_api_key ? s.api_key_hint : 'sk-ant-…';
+  $settingsKeyHint.textContent = s.has_api_key
+    ? `Clé en place : ${s.api_key_hint}`
+    : 'Aucune clé configurée — la variable LLM_API_KEY sera utilisée en fallback.';
+  $settingsClearKey.classList.toggle('hidden', !s.has_api_key);
+  _setKeyStatus(null);
+}
+
+function _setKeyStatus(state) {
+  $settingsKeyStatus.classList.remove('hidden', 'flex');
+  if (state === null) { $settingsKeyStatus.innerHTML = ''; return; }
+  $settingsKeyStatus.classList.add('flex');
+  if (state === 'valid') {
+    $settingsKeyStatus.innerHTML =
+      `<span class="w-2 h-2 rounded-full bg-emerald-500 flex-shrink-0"></span>
+       <span class="text-emerald-700 dark:text-emerald-400">Clé valide</span>`;
+  } else if (state === 'invalid') {
+    $settingsKeyStatus.innerHTML =
+      `<span class="w-2 h-2 rounded-full bg-red-500 flex-shrink-0"></span>
+       <span class="text-red-600 dark:text-red-400" id="settingsKeyErrMsg"></span>`;
+  } else if (state === 'checking') {
+    $settingsKeyStatus.innerHTML =
+      `<span class="w-3 h-3 border-2 border-stone-300 border-t-brand-600 rounded-full animate-spin flex-shrink-0"></span>
+       <span class="text-stone-400">Vérification…</span>`;
+  }
+}
+
+$settingsVerify.addEventListener('click', async () => {
+  // Si l'utilisateur a saisi une nouvelle clé, la sauvegarder d'abord
+  const newKey = $settingsApiKey.value.trim();
+  if (newKey) {
+    await fetch('/api/settings', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify({ api_key: newKey }) });
+  }
+  _setKeyStatus('checking');
+  $settingsVerify.disabled = true;
+  const res = await fetch('/api/settings/verify', { method: 'POST' });
+  $settingsVerify.disabled = false;
+  if (!res.ok) { _setKeyStatus('invalid'); return; }
+  const data = await res.json();
+  _setKeyStatus(data.valid ? 'valid' : 'invalid');
+  if (!data.valid) {
+    const msg = document.getElementById('settingsKeyErrMsg');
+    if (msg) msg.textContent = data.error || 'Clé invalide.';
+  } else {
+    await loadSettings();
+  }
+});
+
+$settingsClearKey.addEventListener('click', async () => {
+  await fetch('/api/settings/api_key', { method: 'DELETE' });
+  await loadSettings();
+  _setKeyStatus(null);
+});
+
+$settingsSave.addEventListener('click', async () => {
+  const body = {};
+  const newKey = $settingsApiKey.value.trim();
+  if (newKey) body.api_key = newKey;
+  body.model = $settingsModel.value;
+  await fetch('/api/settings', { method: 'PUT', headers: {'Content-Type':'application/json'}, body: JSON.stringify(body) });
+  await loadSettings();
+  showPanel(_prevPanelBeforeSettings);
+});
+
+$settingsCancel.addEventListener('click', () => {
+  showPanel(_prevPanelBeforeSettings);
+});
+
+$btnSettings.addEventListener('click', () => {
+  // Mémoriser le panel actif avant de basculer sur Settings
+  const current = Object.entries(panels).find(([, el]) => !el.classList.contains('hidden'));
+  if (current && current[0] !== 'settings') _prevPanelBeforeSettings = current[0];
+  loadSettings();
+  showPanel('settings');
 });
 
 /* ── Dark mode toggle ────────────────────────────────────────────── */

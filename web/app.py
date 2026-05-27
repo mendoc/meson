@@ -5,13 +5,13 @@ from pathlib import Path
 ROOT = Path(__file__).parent.parent
 sys.path.insert(0, str(ROOT))
 
-from fastapi import BackgroundTasks, FastAPI, Form, HTTPException, UploadFile
+from fastapi import BackgroundTasks, Body, FastAPI, Form, HTTPException, UploadFile
 from fastapi.requests import Request
 from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from web.db import create, get, init_db, list_all, update
+from web.db import create, get, get_setting, init_db, list_all, set_setting, update
 
 HERE = Path(__file__).parent
 app = FastAPI(title="Méson")
@@ -32,6 +32,60 @@ def startup() -> None:
 @app.get("/", response_class=HTMLResponse)
 async def index(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
+
+
+AVAILABLE_MODELS = [
+    {"id": "claude-opus-4-7",           "label": "Claude Opus 4.7 — Le plus puissant"},
+    {"id": "claude-sonnet-4-6",         "label": "Claude Sonnet 4.6 — Rapide et capable"},
+    {"id": "claude-haiku-4-5-20251001", "label": "Claude Haiku 4.5 — Le plus économique"},
+]
+
+
+@app.get("/api/settings")
+async def api_settings_get():
+    import config
+    api_key = get_setting("api_key", "") or ""
+    model   = get_setting("model", config.LLM_MODEL) or config.LLM_MODEL
+    masked  = (api_key[:12] + "…" + api_key[-4:]) if len(api_key) > 16 else ("*" * len(api_key) if api_key else "")
+    return {"has_api_key": bool(api_key), "api_key_hint": masked, "model": model, "models": AVAILABLE_MODELS}
+
+
+@app.put("/api/settings")
+async def api_settings_put(body: dict = Body(...)):
+    api_key = body.get("api_key", "").strip()
+    model   = body.get("model", "").strip()
+    if api_key:
+        set_setting("api_key", api_key)
+    if model:
+        set_setting("model", model)
+    return {"ok": True}
+
+
+@app.delete("/api/settings/api_key")
+async def api_settings_delete_key():
+    set_setting("api_key", "")
+    return {"ok": True}
+
+
+@app.post("/api/settings/verify")
+async def api_settings_verify():
+    import config
+    import anthropic
+    api_key = get_setting("api_key", "") or config.LLM_API_KEY
+    if not api_key:
+        return {"valid": False, "error": "Aucune clé API configurée."}
+    try:
+        client = anthropic.Anthropic(api_key=api_key)
+        client.messages.create(
+            model="claude-haiku-4-5-20251001",
+            max_tokens=1,
+            messages=[{"role": "user", "content": "Hi"}],
+        )
+        return {"valid": True, "error": None}
+    except anthropic.AuthenticationError:
+        return {"valid": False, "error": "Clé API invalide ou révoquée."}
+    except Exception as exc:
+        return {"valid": False, "error": str(exc)}
 
 
 @app.get("/api/cache")
@@ -105,7 +159,9 @@ def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
 
         update(tid, status="processing")
 
-        llm = LLMService(api_key=config.LLM_API_KEY, model=config.LLM_MODEL)
+        api_key = get_setting("api_key", "") or config.LLM_API_KEY
+        model   = get_setting("model", config.LLM_MODEL) or config.LLM_MODEL
+        llm = LLMService(api_key=api_key, model=model)
         extractor = PageExtractor(source_pdf)
         img_extractor = ImageExtractor(images_dir)
         translator = SemanticTranslator(llm)

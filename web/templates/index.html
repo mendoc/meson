@@ -41,12 +41,20 @@
       </div>
     </div>
 
-    <!-- Bouton mode sombre/clair/système -->
+    <!-- Contrôles header -->
     <div class="ml-auto flex items-center gap-2">
       <span id="themeModeLabel" class="text-xs text-stone-400 dark:text-stone-500 select-none"></span>
       <button id="themeToggle"
         class="w-9 h-9 rounded-lg border-2 border-stone-200 dark:border-stone-700 flex items-center justify-center text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
         title="Changer le thème d'affichage"></button>
+      <button id="btnSettings"
+        class="w-9 h-9 rounded-lg border-2 border-stone-200 dark:border-stone-700 flex items-center justify-center text-stone-500 dark:text-stone-400 hover:bg-stone-100 dark:hover:bg-stone-800 hover:border-stone-300 dark:hover:border-stone-600 transition-colors"
+        title="Paramètres LLM">
+        <svg class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>
+        </svg>
+      </button>
     </div>
   </header>
 
@@ -184,6 +192,64 @@
           </a>
         </div>
         <iframe id="pdfFrame" class="flex-1 w-full border-0" src="about:blank"></iframe>
+      </div>
+
+      <!-- Panel : Paramètres LLM -->
+      <div id="panelSettings" class="hidden absolute inset-0 overflow-y-auto p-8 bg-stone-100 dark:bg-stone-950">
+        <div class="max-w-lg mx-auto flex flex-col gap-6">
+
+          <div>
+            <h2 class="font-serif text-2xl font-normal text-stone-800 dark:text-stone-100">Paramètres LLM</h2>
+            <p class="text-sm text-stone-500 dark:text-stone-400 mt-1">Configurez votre clé API Anthropic et le modèle utilisé pour les traductions.</p>
+          </div>
+
+          <div class="bg-white dark:bg-stone-900 rounded-xl shadow-md border border-stone-300 dark:border-stone-700 p-6 flex flex-col gap-5">
+
+            <!-- Clé API -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wide" for="settingsApiKey">Clé API Anthropic</label>
+              <div class="flex gap-2">
+                <input id="settingsApiKey" type="password" placeholder="sk-ant-…"
+                  autocomplete="off" spellcheck="false"
+                  class="flex-1 px-3 py-2.5 rounded-lg border-2 border-stone-300 dark:border-stone-600 text-sm text-stone-800 dark:text-stone-100 bg-stone-50 dark:bg-stone-800 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 focus:bg-white dark:focus:bg-stone-700 transition font-mono">
+                <button id="settingsVerifyBtn"
+                  class="px-3 py-2 text-xs font-semibold border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-600 dark:text-stone-300 whitespace-nowrap">
+                  Vérifier
+                </button>
+              </div>
+              <!-- Indicateur de validité -->
+              <div id="settingsKeyStatus" class="hidden items-center gap-2 mt-1 text-xs font-semibold"></div>
+              <p id="settingsKeyHint" class="text-xs text-stone-400 dark:text-stone-500 mt-0.5"></p>
+            </div>
+
+            <!-- Modèle -->
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wide" for="settingsModel">Modèle</label>
+              <select id="settingsModel"
+                class="px-3 py-2.5 rounded-lg border-2 border-stone-300 dark:border-stone-600 text-sm text-stone-800 dark:text-stone-100 bg-stone-50 dark:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 focus:bg-white dark:focus:bg-stone-700 transition">
+              </select>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex items-center justify-between pt-2 border-t border-stone-200 dark:border-stone-700">
+              <button id="settingsClearKeyBtn"
+                class="text-xs text-red-500 hover:text-red-700 dark:hover:text-red-400 transition-colors hidden">
+                Supprimer la clé
+              </button>
+              <div class="flex gap-3 ml-auto">
+                <button id="settingsCancelBtn"
+                  class="px-4 py-2 text-sm border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-600 dark:text-stone-300">
+                  Annuler
+                </button>
+                <button id="settingsSaveBtn"
+                  class="px-5 py-2 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors shadow-sm">
+                  Enregistrer
+                </button>
+              </div>
+            </div>
+
+          </div>
+        </div>
       </div>
 
       <!-- Panel : Erreur -->

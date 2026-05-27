@@ -31,6 +31,12 @@ def init_db() -> None:
             db.execute("ALTER TABLE translations ADD COLUMN theme TEXT NOT NULL DEFAULT 'standard'")
         except Exception:
             pass
+        db.execute("""
+            CREATE TABLE IF NOT EXISTS settings (
+                key   TEXT PRIMARY KEY,
+                value TEXT NOT NULL
+            )
+        """)
 
 
 @contextmanager
@@ -72,3 +78,17 @@ def list_all() -> list[dict]:
             "SELECT * FROM translations ORDER BY created_at DESC"
         ).fetchall()
         return [dict(r) for r in rows]
+
+
+def get_setting(key: str, default: str | None = None) -> str | None:
+    with _conn() as db:
+        row = db.execute("SELECT value FROM settings WHERE key = ?", (key,)).fetchone()
+        return row["value"] if row else default
+
+
+def set_setting(key: str, value: str) -> None:
+    with _conn() as db:
+        db.execute(
+            "INSERT INTO settings (key, value) VALUES (?, ?) ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (key, value),
+        )
