@@ -106,12 +106,14 @@ export function updateActivePanel(t) {
 
   _prevStatus = 'pending';
   showPanel('progress');
-  document.getElementById('progressTitle').textContent = `${t.titre} — ${t.auteur}`;
+  const _titre  = t.titre  || 'Analyse en cours…';
+  const _auteur = t.auteur || '';
+  document.getElementById('progressTitle').textContent = _auteur ? `${_titre} — ${_auteur}` : _titre;
 }
 
 function _showViewer(t, mode, n = 0, total = 0, forceReload = false) {
   showPanel('viewer');
-  $viewerTitle.textContent = t.titre;
+  $viewerTitle.textContent = t.titre || 'Analyse en cours…';
 
   const $btnRecompile   = document.getElementById('btnRecompile');
   const $btnPages       = document.getElementById('btnPages');

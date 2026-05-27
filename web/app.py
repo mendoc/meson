@@ -153,8 +153,8 @@ async def api_get(tid: int):
 async def api_translate(
     background_tasks: BackgroundTasks,
     file: UploadFile,
-    titre: str = Form(...),
-    auteur: str = Form(...),
+    titre: str = Form(""),
+    auteur: str = Form(""),
     police: str = Form("crimson_pro"),
     theme: str = Form("standard"),
     page_range: str = Form(""),
@@ -304,6 +304,16 @@ def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
         if not selected:
             selected = list(range(1, total + 1))
         range_size = len(selected)
+
+        # Inférer titre/auteur via LLM si non renseignés par l'utilisateur
+        if not titre.strip() or not auteur.strip():
+            ctx0 = extractor.extract_context(selected[0] - 1)
+            info = llm.infer_book_info(ctx0.text)
+            if not titre.strip():
+                titre = info.get('titre') or 'Titre inconnu'
+            if not auteur.strip():
+                auteur = info.get('auteur') or 'Auteur inconnu'
+            update(tid, titre=titre, auteur=auteur)
 
         update(tid, page_count=total)
 

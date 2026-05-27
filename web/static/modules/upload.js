@@ -19,76 +19,50 @@ const $pageRangeHint = document.getElementById('pageRangeHint');
 const $promptCustom  = document.getElementById('promptCustom');
 const $submitBtn     = document.getElementById('submitBtn');
 
-let _pageTotal = 0;
-
-function parsePageRange(str, total) {
-  const pages = new Set();
+function _validateRange(str) {
   for (const part of str.split(',')) {
     const t = part.trim();
-    const range = t.match(/^(\d+)-(\d+)$/);
-    if (range) {
-      const a = +range[1], b = +range[2];
-      for (let i = Math.min(a, b); i <= Math.max(a, b); i++) pages.add(i);
-    } else if (/^\d+$/.test(t)) {
-      pages.add(+t);
-    } else if (t !== '') {
-      return null; // syntaxe invalide
-    }
+    if (t === '') continue;
+    if (!/^(\d+-\d+|\d+)$/.test(t)) return false;
   }
-  return [...pages].filter(p => p >= 1 && p <= total).sort((a, b) => a - b);
+  return true;
 }
 
 function updateRangeHint() {
-  if (!_pageTotal) return;
   const val = $pageRange.value.trim();
   if (!val) {
-    $pageRangeHint.textContent = `${_pageTotal} pages`;
+    $pageRangeHint.textContent = 'Toutes les pages';
     $pageRangeHint.className = 'text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap min-w-[7rem] text-right';
     return;
   }
-  const pages = parsePageRange(val, _pageTotal);
-  if (!pages) {
+  if (!_validateRange(val)) {
     $pageRangeHint.textContent = 'Format invalide';
     $pageRangeHint.className = 'text-xs text-red-500 whitespace-nowrap min-w-[7rem] text-right';
   } else {
-    $pageRangeHint.textContent = `${pages.length} page${pages.length > 1 ? 's' : ''}`;
-    $pageRangeHint.className = 'text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap min-w-[7rem] text-right';
+    $pageRangeHint.textContent = '';
+    $pageRangeHint.className = '';
   }
 }
 
 $pageRange.addEventListener('input', updateRangeHint);
 
 function checkSubmitReady() {
-  $submitBtn.disabled = !(state.selectedFile && $titre.value.trim() && $auteur.value.trim());
+  $submitBtn.disabled = !state.selectedFile;
 }
 
-async function setFile(f) {
+function setFile(f) {
   state.selectedFile = f;
   $chosenFile.textContent = f.name;
   $dropIdle.classList.add('hidden');
   $dropReady.classList.remove('hidden');
   $dropReady.classList.add('flex');
-
-  // Inspecter le PDF pour obtenir le nombre de pages
-  try {
-    const form = new FormData();
-    form.append('file', f);
-    const res = await fetch('/api/inspect', { method: 'POST', body: form });
-    if (res.ok) {
-      const { page_count } = await res.json();
-      _pageTotal = page_count;
-      $pageRange.value    = `1-${page_count}`;
-      $pageRange.disabled = false;
-      updateRangeHint();
-    }
-  } catch { /* non bloquant */ }
-
+  $pageRange.disabled = false;
+  updateRangeHint();
   checkSubmitReady();
 }
 
 function resetForm() {
   state.selectedFile    = null;
-  _pageTotal            = 0;
   $fileInput.value      = '';
   $titre.value          = '';
   $auteur.value         = '';
@@ -98,7 +72,7 @@ function resetForm() {
   $dropIdle.classList.remove('hidden');
   $dropReady.classList.add('hidden');
   $dropReady.classList.remove('flex');
-  _loadPrefs(); // restaure les dernières préférences plutôt que les valeurs par défaut
+  _loadPrefs();
   checkSubmitReady();
 }
 
@@ -113,8 +87,6 @@ $dropzone.addEventListener('drop', e => {
 $dropzone.addEventListener('click', () => $fileInput.click());
 $browseBtn.addEventListener('click', e => { e.stopPropagation(); $fileInput.click(); });
 $fileInput.addEventListener('change', () => { if ($fileInput.files[0]) setFile($fileInput.files[0]); });
-$titre.addEventListener('input', checkSubmitReady);
-$auteur.addEventListener('input', checkSubmitReady);
 
 const _LS_KEY = 'meson_form_prefs';
 

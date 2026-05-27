@@ -121,6 +121,28 @@ class LLMService:
                       f"pause {wait}s (essai {attempt + 1}/{len(delays)})…")
                 time.sleep(wait)
 
+    def infer_book_info(self, text: str) -> dict:
+        """Déduit titre et auteur depuis le texte de la première page."""
+        import json
+        client = self._get_client()
+        try:
+            response = client.messages.create(
+                model=self.model,
+                max_tokens=200,
+                messages=[{"role": "user", "content": (
+                    "Voici le texte extrait d'une première page de livre. "
+                    "Identifie le titre et l'auteur. "
+                    "Réponds uniquement en JSON : {\"titre\": \"...\", \"auteur\": \"...\"} "
+                    "Si tu ne peux pas déterminer une valeur, utilise null.\n\n"
+                    f"{text[:2000]}"
+                )}],
+            )
+            raw = response.content[0].text.strip()
+            m = re.search(r'\{[^}]+\}', raw, re.DOTALL)
+            return json.loads(m.group()) if m else {}
+        except Exception:
+            return {}
+
     def _build_user_message(self, context: PageContext) -> str:
         return (
             f"CONTEXTE_PRÉCÉDENT (Page {context.page_number - 1}) :\n"
