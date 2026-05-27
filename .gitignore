@@ -9,6 +9,9 @@ venv/
 # ── Base de données des sessions ──────────────────────────────────────────────
 translations.db
 
+# ── Cache des traductions ─────────────────────────────────────────────────────
+cache/
+
 # ── Sorties générées ──────────────────────────────────────────────────────────
 output/*
 !output/.gitkeep

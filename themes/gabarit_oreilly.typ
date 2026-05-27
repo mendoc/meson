@@ -16,7 +16,7 @@
     header: context {
       let page-num = counter(page).get().first()
       if page-num <= 1 { return }
-      set text(font: ("Arial", "DejaVu Sans"), size: 8.5pt, fill: rgb("#4a5568"))
+      set text(font: ("Lora", "Arial", "DejaVu Sans"), size: 8.5pt, fill: rgb("#4a5568"))
       if calc.even(page-num) {
         grid(
           columns: (1fr, 1fr),
@@ -58,14 +58,14 @@
 
   // 3. STYLES DE TITRES
   show heading.where(level: 1): it => block(width: 100%, below: 2em)[
-    #set text(font: ("Arial", "DejaVu Sans"), weight: "bold", fill: rgb("#1a202c"))
+    #set text(font: ("Lora", "DejaVu Serif"), weight: "bold", fill: rgb("#1a202c"))
     #smallcaps(it.body)
     #v(0.2em)
     #line(length: 100%, stroke: 1.5pt + rgb("#1a202c"))
   ]
 
   show heading.where(level: 2): it => block(below: 1em, above: 1.8em)[
-    #set text(font: ("Arial", "DejaVu Sans"), size: 13pt, weight: "bold", fill: rgb("#2d3748"))
+    #set text(font: ("Lora", "DejaVu Serif"), size: 13pt, weight: "bold", fill: rgb("#2d3748"))
     #it.body
   ]
 

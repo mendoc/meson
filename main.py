@@ -48,11 +48,28 @@ def run(source_pdf: Path, titre: str, auteur: str,
 
 
 if __name__ == "__main__":
+    if len(sys.argv) >= 2 and sys.argv[1] == "--clear-cache":
+        from services import translation_cache as cache
+        model_filter = sys.argv[2] if len(sys.argv) > 2 else None
+        n = cache.clear(model=model_filter)
+        suffix = f" (modèle : {model_filter})" if model_filter else ""
+        print(f"{n} entrée(s) de cache supprimée(s){suffix}.")
+        sys.exit(0)
+
+    if len(sys.argv) >= 2 and sys.argv[1] == "--cache-stats":
+        from services import translation_cache as cache
+        s = cache.stats()
+        print(f"Cache : {s['entries']} entrée(s), {s['size_kb']} Ko")
+        sys.exit(0)
+
     if len(sys.argv) < 4:
         print("Usage : python main.py <source.pdf> <titre> <auteur> [police] [theme]")
+        print(f"        python main.py --cache-stats")
+        print(f"        python main.py --clear-cache [modele]")
         print(f"Polices disponibles : {', '.join(FONTS)}")
         print(f"Thèmes disponibles  : {', '.join(THEMES)}")
         sys.exit(1)
+
     police_slug = sys.argv[4] if len(sys.argv) > 4 else DEFAULT_FONT
     theme_slug  = sys.argv[5] if len(sys.argv) > 5 else DEFAULT_THEME
     run(Path(sys.argv[1]), titre=sys.argv[2], auteur=sys.argv[3],

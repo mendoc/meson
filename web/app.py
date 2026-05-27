@@ -34,6 +34,19 @@ async def index(request: Request):
     return templates.TemplateResponse(request=request, name="index.html")
 
 
+@app.get("/api/cache")
+async def api_cache_stats():
+    from services import translation_cache as cache
+    return cache.stats()
+
+
+@app.delete("/api/cache")
+async def api_cache_clear(model: str | None = None):
+    from services import translation_cache as cache
+    n = cache.clear(model=model)
+    return {"deleted": n}
+
+
 @app.get("/api/translations")
 async def api_list():
     return list_all()
