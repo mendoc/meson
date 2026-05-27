@@ -92,15 +92,13 @@ function resetForm() {
   $fileInput.value      = '';
   $titre.value          = '';
   $auteur.value         = '';
-  $police.value         = 'crimson_pro';
-  $theme.value          = 'standard';
   $pageRange.value      = '';
   $pageRange.disabled   = true;
   $pageRangeHint.textContent = '';
-  $promptCustom.value   = '';
   $dropIdle.classList.remove('hidden');
   $dropReady.classList.add('hidden');
   $dropReady.classList.remove('flex');
+  _loadPrefs(); // restaure les dernières préférences plutôt que les valeurs par défaut
   checkSubmitReady();
 }
 
@@ -118,8 +116,30 @@ $fileInput.addEventListener('change', () => { if ($fileInput.files[0]) setFile($
 $titre.addEventListener('input', checkSubmitReady);
 $auteur.addEventListener('input', checkSubmitReady);
 
+const _LS_KEY = 'meson_form_prefs';
+
+function _savePrefs() {
+  localStorage.setItem(_LS_KEY, JSON.stringify({
+    police:       $police.value,
+    theme:        $theme.value,
+    promptCustom: $promptCustom.value.trim(),
+  }));
+}
+
+function _loadPrefs() {
+  try {
+    const p = JSON.parse(localStorage.getItem(_LS_KEY) || '{}');
+    if (p.police)       $police.value       = p.police;
+    if (p.theme)        $theme.value        = p.theme;
+    if (p.promptCustom) $promptCustom.value = p.promptCustom;
+  } catch {}
+}
+
+_loadPrefs();
+
 $submitBtn.addEventListener('click', async () => {
   if (!state.selectedFile) return;
+  _savePrefs();
   const form = new FormData();
   form.append('file',   state.selectedFile);
   form.append('titre',  $titre.value.trim());
