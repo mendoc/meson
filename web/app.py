@@ -12,7 +12,8 @@ from fastapi.responses import FileResponse, HTMLResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
-from web.db import create, delete, get, get_setting, init_db, list_all, set_setting, update
+from web.db import (create, delete, delete_pages, get, get_setting, init_db,
+                    insert_page, list_all, list_pages, set_setting, update)
 
 HERE = Path(__file__).parent
 app = FastAPI(title="Méson")
@@ -172,6 +173,7 @@ async def api_delete(tid: int):
     t = delete(tid)
     if not t:
         raise HTTPException(404)
+    delete_pages(tid)
     for name in (t.get("output_name"), t.get("source_name")):
         if not name:
             continue
@@ -182,7 +184,26 @@ async def api_delete(tid: int):
         typ = (OUTPUT_DIR / name).with_suffix(".typ")
         if typ.exists():
             typ.unlink()
+    for ext in (".pdf", ".typ"):
+        p = OUTPUT_DIR / f"{tid}__partial{ext}"
+        if p.exists():
+            p.unlink()
     return {"ok": True}
+
+
+@app.get("/api/translations/{tid}/pages")
+async def api_pages(tid: int):
+    if not get(tid):
+        raise HTTPException(404)
+    return list_pages(tid)
+
+
+@app.get("/api/output/{tid}/partial")
+async def api_output_partial(tid: int):
+    pdf = OUTPUT_DIR / f"{tid}__partial.pdf"
+    if not pdf.exists():
+        raise HTTPException(404)
+    return FileResponse(pdf, media_type="application/pdf", content_disposition_type="inline")
 
 
 @app.get("/api/output/{tid}")
@@ -195,6 +216,9 @@ async def api_output(tid: int):
         raise HTTPException(404)
     return FileResponse(pdf, media_type="application/pdf",
                         filename=pdf.name, content_disposition_type="inline")
+
+
+_PARTIAL_EVERY = 5  # compile un PDF partiel toutes les N pages
 
 
 def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
@@ -233,17 +257,30 @@ def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
 
         update(tid, page_count=total)
 
+        police = config.FONTS.get(police_slug, config.FONTS[config.DEFAULT_FONT])
+        theme  = config.THEMES.get(theme_slug, config.THEMES[config.DEFAULT_THEME])
+
         pages: list[TranslatedPage] = []
         for i, p in enumerate(selected):
             n = p - 1  # 0-based index
             ctx = extractor.extract_context(n)
             illustrations = img_extractor.extract(source_pdf, n)
             typst_code = translator.translate(ctx)
-            pages.append(TranslatedPage(page_number=n, typst_code=typst_code, illustrations=illustrations))
+            page = TranslatedPage(page_number=n, typst_code=typst_code, illustrations=illustrations)
+            pages.append(page)
+            insert_page(tid, page_number=n, typst_code=typst_code)
+
+            # Compiler le partiel AVANT la mise à jour du statut
+            # pour qu'il soit déjà disponible quand le frontend poll
+            if i == 0 or (i + 1) % _PARTIAL_EVERY == 0:
+                try:
+                    composer.assemble(pages, titre=titre, auteur=auteur,
+                                      police=police, theme=theme, tid=tid, partial=True)
+                except Exception:
+                    pass  # échec partiel non bloquant
+
             update(tid, status=f"processing:{i + 1}/{range_size}")
 
-        police = config.FONTS.get(police_slug, config.FONTS[config.DEFAULT_FONT])
-        theme  = config.THEMES.get(theme_slug, config.THEMES[config.DEFAULT_THEME])
         pdf = composer.assemble(pages, titre=titre, auteur=auteur, police=police, theme=theme, tid=tid)
         update(tid, status="done", output_name=pdf.name)
 

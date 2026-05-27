@@ -22,6 +22,10 @@ export function renderList(translations) {
           <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${badge}">${s.label}</span>
           <span class="text-xs text-stone-400">${formatDate(t.created_at)}</span>
         </div>
+        ${s.cls === 'processing' && s.pct > 0 ? `
+        <div class="mt-1.5 w-full bg-stone-200 dark:bg-stone-700 rounded-full h-0.5 overflow-hidden">
+          <div class="h-full bg-brand-600 rounded-full transition-all" style="width:${s.pct}%"></div>
+        </div>` : ''}
         <button
           class="absolute top-2 right-2 w-6 h-6 rounded flex items-center justify-center opacity-0 group-hover:opacity-100 text-stone-400 hover:text-red-500 hover:bg-red-50 dark:hover:bg-red-900/30 transition-all"
           title="Supprimer"

@@ -40,6 +40,14 @@ def init_db() -> None:
         except Exception:
             pass
         db.execute("""
+            CREATE TABLE IF NOT EXISTS translation_pages (
+                id             INTEGER PRIMARY KEY AUTOINCREMENT,
+                translation_id INTEGER NOT NULL,
+                page_number    INTEGER NOT NULL,
+                typst_code     TEXT    NOT NULL
+            )
+        """)
+        db.execute("""
             CREATE TABLE IF NOT EXISTS settings (
                 key   TEXT PRIMARY KEY,
                 value TEXT NOT NULL
@@ -99,6 +107,28 @@ def delete(tid: int) -> dict | None:
         data = dict(row)
         db.execute("DELETE FROM translations WHERE id = ?", (tid,))
         return data
+
+
+def insert_page(tid: int, page_number: int, typst_code: str) -> None:
+    with _conn() as db:
+        db.execute(
+            "INSERT INTO translation_pages (translation_id, page_number, typst_code) VALUES (?, ?, ?)",
+            (tid, page_number, typst_code),
+        )
+
+
+def list_pages(tid: int) -> list[dict]:
+    with _conn() as db:
+        rows = db.execute(
+            "SELECT page_number, typst_code FROM translation_pages WHERE translation_id = ? ORDER BY page_number",
+            (tid,),
+        ).fetchall()
+        return [dict(r) for r in rows]
+
+
+def delete_pages(tid: int) -> None:
+    with _conn() as db:
+        db.execute("DELETE FROM translation_pages WHERE translation_id = ?", (tid,))
 
 
 def get_setting(key: str, default: str | None = None) -> str | None:

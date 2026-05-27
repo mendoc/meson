@@ -180,34 +180,32 @@
         </div>
       </div>
 
-      <!-- Panel : Progression -->
+      <!-- Panel : Progression (initialisation avant la 1re page) -->
       <div id="panelProgress" class="hidden absolute inset-0 flex items-center justify-center bg-stone-100 dark:bg-stone-950">
-        <div class="bg-white dark:bg-stone-900 rounded-xl shadow-md border border-stone-300 dark:border-stone-700 p-10 flex flex-col items-center gap-6 w-full max-w-md mx-8 text-center">
-          <div class="w-12 h-12 border-4 border-stone-200 dark:border-stone-700 border-t-brand-600 rounded-full animate-spin"></div>
-          <div>
-            <h2 id="progressTitle" class="font-serif text-xl font-normal text-stone-800 dark:text-stone-100"></h2>
-            <p id="progressText" class="text-sm text-stone-500 dark:text-stone-400 mt-1">Initialisation…</p>
-          </div>
-          <div class="w-full">
-            <div class="w-full bg-stone-200 dark:bg-stone-700 rounded-full h-2 overflow-hidden">
-              <div id="progressFill" class="h-full bg-brand-600 rounded-full transition-all duration-500" style="width:0%"></div>
-            </div>
-            <p id="progressPct" class="text-xs text-stone-400 dark:text-stone-500 mt-2">0 %</p>
-          </div>
+        <div class="flex flex-col items-center gap-4 text-stone-400 dark:text-stone-500">
+          <div class="w-10 h-10 border-4 border-stone-200 dark:border-stone-700 border-t-brand-600 rounded-full animate-spin"></div>
+          <p id="progressTitle" class="text-sm font-medium text-stone-500 dark:text-stone-400"></p>
         </div>
       </div>
 
-      <!-- Panel : Visualiseur PDF -->
+      <!-- Panel : Visualiseur PDF (aussi utilisé pendant le processing) -->
       <div id="panelViewer" class="hidden absolute inset-0 flex flex-col bg-stone-100 dark:bg-stone-950">
         <div class="flex items-center justify-between px-6 py-3 bg-white dark:bg-stone-900 border-b-2 border-stone-300 dark:border-stone-700 shadow-sm flex-shrink-0">
-          <div>
-            <h2 id="viewerTitle" class="font-serif text-base font-normal text-stone-800 dark:text-stone-100 truncate mr-4"></h2>
-            <p class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Traduction terminée</p>
+          <div class="flex items-center gap-3 min-w-0">
+            <div id="viewerSpinner" class="hidden flex-shrink-0 w-4 h-4 border-2 border-stone-200 dark:border-stone-600 border-t-brand-600 rounded-full animate-spin"></div>
+            <div class="min-w-0">
+              <h2 id="viewerTitle" class="font-serif text-base font-normal text-stone-800 dark:text-stone-100 truncate"></h2>
+              <p id="viewerStatusText" class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Traduction terminée</p>
+            </div>
           </div>
           <a id="downloadBtn" href="#"
             class="flex-shrink-0 px-4 py-2 text-sm font-semibold border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 hover:border-stone-400 dark:hover:border-stone-500 transition-colors text-stone-700 dark:text-stone-300 no-underline shadow-sm">
             ↓ Télécharger
           </a>
+        </div>
+        <!-- Barre de progression fine (visible pendant le traitement) -->
+        <div id="viewerProgressContainer" class="hidden h-1 bg-stone-200 dark:bg-stone-700 flex-shrink-0">
+          <div id="viewerProgressBar" class="h-full bg-brand-600 transition-all duration-500" style="width:0%"></div>
         </div>
         <iframe id="pdfFrame" class="flex-1 w-full border-0" src="about:blank"></iframe>
       </div>

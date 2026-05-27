@@ -17,16 +17,25 @@ class TypstComposer:
     def assemble(self, pages: list[TranslatedPage], titre: str, auteur: str,
                  police: tuple[str, ...] = ("Crimson Pro", "Linux Libertine", "DejaVu Serif"),
                  theme: dict | None = None,
-                 tid: int | None = None) -> Path:
-        """Génère le fichier .typ final encapsulé dans le gabarit, puis compile."""
+                 tid: int | None = None,
+                 partial: bool = False) -> Path:
+        """Génère le fichier .typ encapsulé dans le gabarit, puis compile.
+
+        Si partial=True, le fichier est nommé {tid}__partial.{typ,pdf} et
+        n'écrase pas le PDF final.
+        """
         if theme is None:
             theme = {"file": "gabarit_standard", "fn": "gabarit-standard"}
 
         body = "\n\n".join(p.typst_code for p in pages)
-        title_slug = "".join(c if c.isalnum() or c == "_" else "_" for c in titre.lower())[:35]
-        theme_slug = theme["file"].replace("gabarit_", "")
-        id_part = f"__{tid}" if tid is not None else ""
-        slug = f"{title_slug}__{theme_slug}{id_part}"
+
+        if partial and tid is not None:
+            slug = f"{tid}__partial"
+        else:
+            title_slug = "".join(c if c.isalnum() or c == "_" else "_" for c in titre.lower())[:35]
+            theme_slug = theme["file"].replace("gabarit_", "")
+            id_part = f"__{tid}" if tid is not None else ""
+            slug = f"{title_slug}__{theme_slug}{id_part}"
         typ_file = self.output_dir / f"{slug}.typ"
 
         font_typst = "(" + ", ".join(f'"{f}"' for f in police) + ")"
