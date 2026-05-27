@@ -169,7 +169,11 @@
             </div>
 
             <div class="flex items-center justify-between pt-2 border-t border-stone-200 dark:border-stone-700">
-              <p class="text-xs text-stone-400 dark:text-stone-500">Le PDF sera traduit page par page via l'API Anthropic.</p>
+              <label class="flex items-center gap-2 cursor-pointer select-none">
+                <input id="couverture" type="checkbox"
+                  class="w-4 h-4 rounded border-stone-300 dark:border-stone-600 text-brand-600 focus:ring-brand-600 focus:ring-offset-0 bg-stone-50 dark:bg-stone-800">
+                <span class="text-sm text-stone-600 dark:text-stone-300">Page de garde</span>
+              </label>
               <button id="submitBtn" disabled
                 class="px-5 py-2.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shadow-sm">
                 Lancer la traduction →
@@ -235,6 +239,11 @@
               <option value="oreilly">O'Reilly — Technique avec en-têtes</option>
             </select>
           </div>
+          <label class="flex items-center gap-2 cursor-pointer select-none">
+            <input id="recompileCouverture" type="checkbox"
+              class="w-4 h-4 rounded border-stone-300 dark:border-stone-600 text-brand-600 focus:ring-brand-600 focus:ring-offset-0 bg-white dark:bg-stone-700">
+            <span class="text-xs font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wide">Page de garde</span>
+          </label>
           <button id="recompileSubmit"
             class="px-4 py-1.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors shadow-sm">
             Lancer la recompilation

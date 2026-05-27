@@ -2,6 +2,7 @@
   titre: "Titre de l'Ouvrage Original",
   auteur: "Nom de l'Auteur",
   police: ("Crimson Pro", "Linux Libertine", "DejaVu Serif"),
+  couverture: false,
   body
 ) = {
   set page(
@@ -29,6 +30,20 @@
   )
 
   set block(breakable: true)
+
+  if couverture {
+    page(numbering: none)[
+      #set par(first-line-indent: 0pt)
+      #align(center + horizon)[
+        #text(font: police, size: 28pt, weight: "bold")[#titre]
+        #v(1.5em)
+        #text(font: police, size: 14pt, style: "italic")[#auteur]
+      ]
+      #place(bottom + center, dy: -2.5em)[
+        #text(size: 8pt, fill: luma(180))[Méson · #datetime.today().display("[year]")]
+      ]
+    ]
+  }
 
   page(numbering: none)[
     #set text(font: ("EB Garamond", "Linux Libertine", "DejaVu Serif"), size: 10pt)

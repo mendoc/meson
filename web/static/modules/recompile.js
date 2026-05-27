@@ -29,12 +29,13 @@ function _triggerRecompilingUI() {
 
 // ── Panneau recompilation ─────────────────────────────────────────────────────
 
-const $btnRecompile    = document.getElementById('btnRecompile');
-const $recompilePanel  = document.getElementById('recompilePanel');
-const $recompilePolice = document.getElementById('recompilePolice');
-const $recompileTheme  = document.getElementById('recompileTheme');
-const $recompileSubmit = document.getElementById('recompileSubmit');
-const $recompileError  = document.getElementById('recompileError');
+const $btnRecompile        = document.getElementById('btnRecompile');
+const $recompilePanel      = document.getElementById('recompilePanel');
+const $recompilePolice     = document.getElementById('recompilePolice');
+const $recompileTheme      = document.getElementById('recompileTheme');
+const $recompileCouverture = document.getElementById('recompileCouverture');
+const $recompileSubmit     = document.getElementById('recompileSubmit');
+const $recompileError      = document.getElementById('recompileError');
 
 $btnRecompile.addEventListener('click', () => {
   $recompilePanel.classList.toggle('hidden');
@@ -46,8 +47,9 @@ async function _syncCurrentParams() {
   const res = await fetch(`/api/translations/${state.activeId}`);
   if (!res.ok) return;
   const t = await res.json();
-  $recompilePolice.value = t.police || 'crimson_pro';
-  $recompileTheme.value  = t.theme  || 'standard';
+  $recompilePolice.value     = t.police    || 'crimson_pro';
+  $recompileTheme.value      = t.theme     || 'standard';
+  $recompileCouverture.checked = Boolean(t.couverture);
 }
 
 $recompileSubmit.addEventListener('click', async () => {
@@ -59,7 +61,7 @@ $recompileSubmit.addEventListener('click', async () => {
   const res = await fetch(`/api/translations/${state.activeId}/recompile`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ police: $recompilePolice.value, theme: $recompileTheme.value }),
+    body:    JSON.stringify({ police: $recompilePolice.value, theme: $recompileTheme.value, couverture: $recompileCouverture.checked }),
   });
 
   $recompileSubmit.disabled    = false;

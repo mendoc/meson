@@ -18,7 +18,8 @@ class TypstComposer:
                  police: tuple[str, ...] = ("Crimson Pro", "Linux Libertine", "DejaVu Serif"),
                  theme: dict | None = None,
                  tid: int | None = None,
-                 partial: bool = False) -> Path:
+                 partial: bool = False,
+                 couverture: bool = False) -> Path:
         """Génère le fichier .typ encapsulé dans le gabarit, puis compile.
 
         Si partial=True, le fichier est nommé {tid}__partial.{typ,pdf} et
@@ -41,9 +42,10 @@ class TypstComposer:
         font_typst = "(" + ", ".join(f'"{f}"' for f in police) + ")"
         theme_file = theme["file"]
         theme_fn   = theme["fn"]
+        couverture_typst = "true" if couverture else "false"
         header = (
             f'#import "/themes/{theme_file}.typ": {theme_fn}\n'
-            f'#show: {theme_fn}.with(titre: "{titre}", auteur: "{auteur}", police: {font_typst})\n\n'
+            f'#show: {theme_fn}.with(titre: "{titre}", auteur: "{auteur}", police: {font_typst}, couverture: {couverture_typst})\n\n'
         )
         typ_file.write_text(header + body, encoding="utf-8")
         return self._compile(typ_file)

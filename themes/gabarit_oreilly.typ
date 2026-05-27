@@ -2,6 +2,7 @@
   titre: "Titre de l'Ouvrage Original",
   auteur: "Nom de l'Auteur",
   police: ("Crimson Pro", "Linux Libertine", "DejaVu Serif"),
+  couverture: false,
   body
 ) = {
   // 1. GÉOMÉTRIE DE LA PAGE
@@ -80,7 +81,22 @@
 
   set list(marker: ([•],), body-indent: 0.6em)
 
-  // 5. PAGE D'AVERTISSEMENT
+  // 5. PAGE DE GARDE (optionnelle)
+  if couverture {
+    page(header: none, numbering: none)[
+      #set par(first-line-indent: 0pt)
+      #align(center + horizon)[
+        #text(font: police, size: 28pt, weight: "bold")[#titre]
+        #v(1.5em)
+        #text(font: ("Lora", "DejaVu Serif"), size: 14pt, style: "italic")[#auteur]
+      ]
+      #place(bottom + center, dy: -2.5em)[
+        #text(size: 8pt, fill: rgb("#a0aec0"))[Méson · #datetime.today().display("[year]")]
+      ]
+    ]
+  }
+
+  // 6. PAGE D'AVERTISSEMENT
   page(header: none)[
     #set text(font: ("Arial", "DejaVu Sans"), size: 9.5pt)
     #set par(first-line-indent: 0pt, justify: false)
