@@ -181,7 +181,7 @@ def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
 
         police = config.FONTS.get(police_slug, config.FONTS[config.DEFAULT_FONT])
         theme  = config.THEMES.get(theme_slug, config.THEMES[config.DEFAULT_THEME])
-        pdf = composer.assemble(pages, titre=titre, auteur=auteur, police=police, theme=theme)
+        pdf = composer.assemble(pages, titre=titre, auteur=auteur, police=police, theme=theme, tid=tid)
         update(tid, status="done", output_name=pdf.name)
 
     except Exception as exc:

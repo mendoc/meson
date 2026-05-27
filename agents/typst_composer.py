@@ -16,7 +16,8 @@ class TypstComposer:
 
     def assemble(self, pages: list[TranslatedPage], titre: str, auteur: str,
                  police: tuple[str, ...] = ("Crimson Pro", "Linux Libertine", "DejaVu Serif"),
-                 theme: dict | None = None) -> Path:
+                 theme: dict | None = None,
+                 tid: int | None = None) -> Path:
         """Génère le fichier .typ final encapsulé dans le gabarit, puis compile."""
         if theme is None:
             theme = {"file": "gabarit_standard", "fn": "gabarit-standard"}
@@ -24,7 +25,8 @@ class TypstComposer:
         body = "\n\n".join(p.typst_code for p in pages)
         title_slug = "".join(c if c.isalnum() or c == "_" else "_" for c in titre.lower())[:35]
         theme_slug = theme["file"].replace("gabarit_", "")
-        slug = f"{title_slug}__{theme_slug}"
+        id_part = f"__{tid}" if tid is not None else ""
+        slug = f"{title_slug}__{theme_slug}{id_part}"
         typ_file = self.output_dir / f"{slug}.typ"
 
         font_typst = "(" + ", ".join(f'"{f}"' for f in police) + ")"
