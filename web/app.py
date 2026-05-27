@@ -85,7 +85,8 @@ async def api_output(tid: int):
     pdf = OUTPUT_DIR / t["output_name"]
     if not pdf.exists():
         raise HTTPException(404)
-    return FileResponse(pdf, media_type="application/pdf", filename=pdf.name)
+    return FileResponse(pdf, media_type="application/pdf",
+                        filename=pdf.name, content_disposition_type="inline")
 
 
 def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,

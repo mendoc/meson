@@ -77,12 +77,12 @@ function renderList(translations) {
     const s      = parseStatus(t.status);
     const badge  = BADGE[s.cls] ?? 'bg-gray-100 text-gray-600';
     const active = t.id === activeId
-      ? 'bg-indigo-50 border-l-4 border-brand-600'
-      : 'border-l-4 border-transparent hover:bg-stone-100';
+      ? 'bg-indigo-50 dark:bg-stone-700 border-l-4 border-brand-600'
+      : 'border-l-4 border-transparent hover:bg-stone-100 dark:hover:bg-stone-800';
     return `
       <li class="px-4 py-3 cursor-pointer transition-colors ${active}" onclick="selectItem(${t.id})">
-        <p class="text-sm font-semibold text-stone-800 truncate">${esc(t.titre)}</p>
-        <p class="text-xs text-stone-500 truncate">${esc(t.auteur)}</p>
+        <p class="text-sm font-semibold text-stone-800 dark:text-stone-100 truncate">${esc(t.titre)}</p>
+        <p class="text-xs text-stone-500 dark:text-stone-300 truncate">${esc(t.auteur)}</p>
         <div class="flex items-center gap-2 mt-1.5">
           <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${badge}">${s.label}</span>
           <span class="text-xs text-stone-400">${formatDate(t.created_at)}</span>
@@ -148,8 +148,9 @@ async function selectItem(id) {
   activeId = id;
   document.querySelectorAll('#translationList li[onclick]').forEach(el => {
     const isActive = el.getAttribute('onclick') === `selectItem(${id})`;
-    el.classList.toggle('bg-blue-50', isActive);
-    el.classList.toggle('border-blue-600', isActive);
+    el.classList.toggle('bg-indigo-50', isActive);
+    el.classList.toggle('dark:bg-stone-700', isActive);
+    el.classList.toggle('border-brand-600', isActive);
     el.classList.toggle('border-transparent', !isActive);
   });
   const res = await fetch(`/api/translations/${id}`);
@@ -231,6 +232,60 @@ $retryBtn.addEventListener('click', () => {
   activeId = null;
   showPanel('upload');
   checkSubmitReady();
+});
+
+/* ── Dark mode toggle ────────────────────────────────────────────── */
+const $themeToggle   = document.getElementById('themeToggle');
+const $themeModeLabel = document.getElementById('themeModeLabel');
+
+const MODES = ['system', 'light', 'dark'];
+
+const MODE_META = {
+  light: {
+    label: 'Clair',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <circle cx="12" cy="12" r="5"/><line x1="12" y1="2" x2="12" y2="4"/><line x1="12" y1="20" x2="12" y2="22"/>
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"/><line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
+      <line x1="2" y1="12" x2="4" y2="12"/><line x1="20" y1="12" x2="22" y2="12"/>
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"/><line x1="18.36" y1="5.64" x2="19.78" y2="4.22"/>
+    </svg>`,
+  },
+  dark: {
+    label: 'Sombre',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
+    </svg>`,
+  },
+  system: {
+    label: 'Auto',
+    icon: `<svg xmlns="http://www.w3.org/2000/svg" class="w-4 h-4" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+      <rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/>
+    </svg>`,
+  },
+};
+
+let _currentMode = localStorage.getItem('colorMode') || 'system';
+let _mq = window.matchMedia('(prefers-color-scheme: dark)');
+
+function _applyMode(mode) {
+  const dark = mode === 'dark' || (mode === 'system' && _mq.matches);
+  document.documentElement.classList.toggle('dark', dark);
+  if ($themeToggle) $themeToggle.innerHTML = MODE_META[mode].icon;
+  if ($themeModeLabel) $themeModeLabel.textContent = MODE_META[mode].label;
+}
+
+function _cycleMode() {
+  const idx = MODES.indexOf(_currentMode);
+  _currentMode = MODES[(idx + 1) % MODES.length];
+  localStorage.setItem('colorMode', _currentMode);
+  _applyMode(_currentMode);
+}
+
+_applyMode(_currentMode);
+if ($themeToggle) $themeToggle.addEventListener('click', _cycleMode);
+
+_mq.addEventListener('change', () => {
+  if (_currentMode === 'system') _applyMode('system');
 });
 
 /* ── Init ────────────────────────────────────────────────────────── */
