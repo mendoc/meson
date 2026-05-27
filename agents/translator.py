@@ -16,13 +16,14 @@ class SemanticTranslator:
 
     def translate(self, context: PageContext) -> str:
         """Traduit la page cible et retourne le code Typst correspondant."""
-        cached = cache.get(context.text, self.llm.model)
+        prompt_custom = self.llm.prompt_custom
+        cached = cache.get(context.text, self.llm.model, prompt_custom)
         if cached is not None:
             print(f"  [CACHE] Page {context.page_number} — résultat en cache.")
             return cached
 
         typst_code = self.llm.compose(context)
-        cache.put(context.text, self.llm.model, typst_code)
+        cache.put(context.text, self.llm.model, typst_code, prompt_custom)
 
         missing = check_technical_terms(context.text, typst_code)
         if missing:

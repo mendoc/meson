@@ -11,20 +11,21 @@ _CACHE_DIR = Path(__file__).parent.parent / "cache" / "translations"
 _PROMPT_HASH = hashlib.md5(SYSTEM_PROMPT.encode()).hexdigest()[:8]
 
 
-def _key(text: str, model: str) -> str:
-    return hashlib.sha256(f"{_PROMPT_HASH}:{model}:{text}".encode()).hexdigest()
+def _key(text: str, model: str, prompt_custom: str = "") -> str:
+    custom_hash = hashlib.md5(prompt_custom.encode()).hexdigest()[:8] if prompt_custom.strip() else ""
+    return hashlib.sha256(f"{_PROMPT_HASH}:{model}:{custom_hash}:{text}".encode()).hexdigest()
 
 
-def get(text: str, model: str) -> str | None:
-    path = _CACHE_DIR / f"{_key(text, model)}.json"
+def get(text: str, model: str, prompt_custom: str = "") -> str | None:
+    path = _CACHE_DIR / f"{_key(text, model, prompt_custom)}.json"
     if path.exists():
         return json.loads(path.read_text(encoding="utf-8"))["typst_code"]
     return None
 
 
-def put(text: str, model: str, typst_code: str) -> None:
+def put(text: str, model: str, typst_code: str, prompt_custom: str = "") -> None:
     _CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    path = _CACHE_DIR / f"{_key(text, model)}.json"
+    path = _CACHE_DIR / f"{_key(text, model, prompt_custom)}.json"
     path.write_text(json.dumps({
         "model": model,
         "prompt_hash": _PROMPT_HASH,
@@ -33,8 +34,8 @@ def put(text: str, model: str, typst_code: str) -> None:
     }, ensure_ascii=False, indent=2), encoding="utf-8")
 
 
-def invalidate(text: str, model: str) -> bool:
-    path = _CACHE_DIR / f"{_key(text, model)}.json"
+def invalidate(text: str, model: str, prompt_custom: str = "") -> bool:
+    path = _CACHE_DIR / f"{_key(text, model, prompt_custom)}.json"
     if path.exists():
         path.unlink()
         return True

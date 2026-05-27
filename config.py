@@ -13,6 +13,7 @@ FONTS: dict[str, tuple[str, ...]] = {
     "sabon":       ("Sabon",        "Linux Libertine", "DejaVu Serif"),
     "crimson_pro": ("Crimson Pro",  "Linux Libertine", "DejaVu Serif"),
     "lora":        ("Lora",         "Linux Libertine", "DejaVu Serif"),
+    "minion_pro":  ("Minion Pro",   "Linux Libertine", "DejaVu Serif"),
 }
 DEFAULT_FONT: str = "crimson_pro"
 

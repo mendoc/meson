@@ -157,12 +157,13 @@ async def api_translate(
     police: str = Form("crimson_pro"),
     theme: str = Form("standard"),
     page_range: str = Form(""),
+    prompt_custom: str = Form(""),
 ):
     dest = UPLOADS_DIR / file.filename
     with dest.open("wb") as f:
         shutil.copyfileobj(file.file, f)
-    tid = create(titre, auteur, file.filename, police, theme, page_range or None)
-    background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police, theme, page_range)
+    tid = create(titre, auteur, file.filename, police, theme, page_range or None, prompt_custom.strip() or None)
+    background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police, theme, page_range, prompt_custom.strip())
     return {"id": tid}
 
 
@@ -198,7 +199,7 @@ async def api_output(tid: int):
 
 def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
                   police_slug: str = "crimson_pro", theme_slug: str = "standard",
-                  page_range: str = "") -> None:
+                  page_range: str = "", prompt_custom: str = "") -> None:
     try:
         import config
         from agents.image_extractor import ImageExtractor
@@ -215,7 +216,7 @@ def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
 
         api_key = get_setting("api_key", "") or config.LLM_API_KEY
         model   = get_setting("model", config.LLM_MODEL) or config.LLM_MODEL
-        llm = LLMService(api_key=api_key, model=model)
+        llm = LLMService(api_key=api_key, model=model, prompt_custom=prompt_custom)
         extractor = PageExtractor(source_pdf)
         img_extractor = ImageExtractor(images_dir)
         translator = SemanticTranslator(llm)

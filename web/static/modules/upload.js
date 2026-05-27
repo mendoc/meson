@@ -16,6 +16,7 @@ const $police      = document.getElementById('police');
 const $theme       = document.getElementById('theme');
 const $pageRange     = document.getElementById('pageRange');
 const $pageRangeHint = document.getElementById('pageRangeHint');
+const $promptCustom  = document.getElementById('promptCustom');
 const $submitBtn     = document.getElementById('submitBtn');
 
 let _pageTotal = 0;
@@ -96,6 +97,7 @@ function resetForm() {
   $pageRange.value      = '';
   $pageRange.disabled   = true;
   $pageRangeHint.textContent = '';
+  $promptCustom.value   = '';
   $dropIdle.classList.remove('hidden');
   $dropReady.classList.add('hidden');
   $dropReady.classList.remove('flex');
@@ -122,9 +124,10 @@ $submitBtn.addEventListener('click', async () => {
   form.append('file',   state.selectedFile);
   form.append('titre',  $titre.value.trim());
   form.append('auteur', $auteur.value.trim());
-  form.append('police',     $police.value);
-  form.append('theme',      $theme.value);
-  form.append('page_range', $pageRange.value.trim());
+  form.append('police',        $police.value);
+  form.append('theme',         $theme.value);
+  form.append('page_range',    $pageRange.value.trim());
+  form.append('prompt_custom', $promptCustom.value.trim());
   $submitBtn.disabled = true;
 
   const res = await fetch('/api/translate', { method: 'POST', body: form });

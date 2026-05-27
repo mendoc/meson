@@ -75,9 +75,10 @@ def _sanitize_typst(text: str) -> str:
 class LLMService:
     """Pilote la génération de la couche Composition via appel LLM."""
 
-    def __init__(self, api_key: str, model: str) -> None:
+    def __init__(self, api_key: str, model: str, prompt_custom: str = "") -> None:
         self.api_key = api_key
         self.model = model
+        self.prompt_custom = prompt_custom
         self._client = None
 
     def _get_client(self):
@@ -86,17 +87,23 @@ class LLMService:
             self._client = anthropic.Anthropic(api_key=self.api_key)
         return self._client
 
+    def _build_system_prompt(self) -> str:
+        if self.prompt_custom.strip():
+            return SYSTEM_PROMPT + f"\n\nINSTRUCTIONS SUPPLÉMENTAIRES DE L'UTILISATEUR :\n{self.prompt_custom.strip()}"
+        return SYSTEM_PROMPT
+
     def compose(self, context: PageContext) -> str:
         """Envoie le contexte glissant au LLM et retourne le code Typst généré."""
         import anthropic
         client = self._get_client()
+        system = self._build_system_prompt()
         delays = [5, 15, 30, 60]
         for attempt, delay in enumerate(delays + [None]):
             try:
                 response = client.messages.create(
                     model=self.model,
                     max_tokens=4096,
-                    system=SYSTEM_PROMPT,
+                    system=system,
                     messages=[{"role": "user", "content": self._build_user_message(context)}],
                 )
                 return _strip_code_fences(response.content[0].text)

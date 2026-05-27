@@ -147,6 +147,7 @@
                   <option value="lora">Lora</option>
                   <option value="eb_garamond">EB Garamond</option>
                   <option value="sabon">Sabon</option>
+                  <option value="minion_pro">Minion Pro</option>
                 </select>
               </div>
             </div>
@@ -158,6 +159,13 @@
                   class="flex-1 px-3 py-2.5 rounded-lg border-2 border-stone-300 dark:border-stone-600 text-sm text-stone-800 dark:text-stone-100 bg-stone-50 dark:bg-stone-800 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 focus:bg-white dark:focus:bg-stone-700 transition disabled:opacity-40 font-mono">
                 <span id="pageRangeHint" class="text-xs text-stone-400 dark:text-stone-500 whitespace-nowrap min-w-[7rem] text-right"></span>
               </div>
+            </div>
+
+            <div class="flex flex-col gap-1.5">
+              <label class="text-xs font-bold text-stone-600 dark:text-stone-300 uppercase tracking-wide" for="promptCustom">Instructions supplémentaires <span class="font-normal normal-case text-stone-400 dark:text-stone-500">(optionnel)</span></label>
+              <textarea id="promptCustom" rows="3"
+                placeholder="ex : Conserve les titres de sections en anglais. Adopte un ton formel et académique."
+                class="px-3 py-2.5 rounded-lg border-2 border-stone-300 dark:border-stone-600 text-sm text-stone-800 dark:text-stone-100 bg-stone-50 dark:bg-stone-800 placeholder-stone-400 dark:placeholder-stone-500 focus:outline-none focus:ring-2 focus:ring-brand-600 focus:border-brand-600 focus:bg-white dark:focus:bg-stone-700 transition resize-none leading-relaxed"></textarea>
             </div>
 
             <div class="flex items-center justify-between pt-2 border-t border-stone-200 dark:border-stone-700">
