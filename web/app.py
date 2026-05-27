@@ -163,7 +163,8 @@ async def api_translate(
     dest = UPLOADS_DIR / file.filename
     with dest.open("wb") as f:
         shutil.copyfileobj(file.file, f)
-    tid = create(titre, auteur, file.filename, police, theme, page_range or None, prompt_custom.strip() or None)
+    model_used = get_setting("model", "") or config.LLM_MODEL
+    tid = create(titre, auteur, file.filename, police, theme, page_range or None, prompt_custom.strip() or None, model_used)
     background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police, theme, page_range, prompt_custom.strip())
     return {"id": tid}
 

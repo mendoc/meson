@@ -39,6 +39,10 @@ def init_db() -> None:
             db.execute("ALTER TABLE translations ADD COLUMN prompt_custom TEXT")
         except Exception:
             pass
+        try:
+            db.execute("ALTER TABLE translations ADD COLUMN model TEXT")
+        except Exception:
+            pass
         db.execute("""
             CREATE TABLE IF NOT EXISTS translation_pages (
                 id             INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -69,11 +73,13 @@ def _conn():
 def create(titre: str, auteur: str, source_name: str,
            police: str = "crimson_pro", theme: str = "standard",
            page_range: str | None = None,
-           prompt_custom: str | None = None) -> int:
+           prompt_custom: str | None = None,
+           model: str | None = None) -> int:
     with _conn() as db:
         cur = db.execute(
-            "INSERT INTO translations (titre, auteur, source_name, police, theme, page_range, prompt_custom, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-            (titre, auteur, source_name, police, theme, page_range, prompt_custom or None, datetime.now().isoformat(timespec="seconds")),
+            "INSERT INTO translations (titre, auteur, source_name, police, theme, page_range, prompt_custom, model, created_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
+            (titre, auteur, source_name, police, theme, page_range, prompt_custom or None, model or None,
+             datetime.now().isoformat(timespec="seconds")),
         )
         return cur.lastrowid
 

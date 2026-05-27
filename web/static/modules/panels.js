@@ -6,6 +6,34 @@ let _currentTid  = null;
 
 export function setCurrentPage(n) { _currentPage = n; }
 
+const _MODEL_LABELS = {
+  'claude-opus-4-7':           'Opus 4.7',
+  'claude-sonnet-4-6':         'Sonnet 4.6',
+  'claude-haiku-4-5-20251001': 'Haiku 4.5',
+};
+const _POLICE_LABELS = {
+  crimson_pro: 'Crimson Pro', lora: 'Lora',
+  eb_garamond: 'EB Garamond', sabon: 'Sabon', minion_pro: 'Minion Pro',
+};
+const _THEME_LABELS = { standard: 'Standard', oreilly: "O'Reilly" };
+
+function _updateMeta(t) {
+  const $meta = document.getElementById('viewerMeta');
+  if (!$meta) return;
+  const parts = [];
+  if (t.model)   parts.push(_MODEL_LABELS[t.model]  || t.model);
+  if (t.police)  parts.push(_POLICE_LABELS[t.police] || t.police);
+  if (t.theme)   parts.push(_THEME_LABELS[t.theme]   || t.theme);
+  if (t.page_range) parts.push(`Pages ${t.page_range}`);
+  if (t.prompt_custom) parts.push(`"${t.prompt_custom.slice(0, 40)}${t.prompt_custom.length > 40 ? '…' : ''}"`);
+  if (parts.length) {
+    $meta.textContent = parts.join(' · ');
+    $meta.classList.remove('hidden');
+  } else {
+    $meta.classList.add('hidden');
+  }
+}
+
 const _panels = {
   upload:   document.getElementById('panelUpload'),
   progress: document.getElementById('panelProgress'),
@@ -127,6 +155,7 @@ function _showViewer(t, mode, n = 0, total = 0, forceReload = false) {
     $downloadBtn.classList.remove('hidden');
     $btnRecompile?.classList.remove('hidden');
     $btnPages?.classList.remove('hidden');
+    _updateMeta(t);
 
     const baseUrl = `/api/output/${t.id}`;
     const url     = baseUrl;
