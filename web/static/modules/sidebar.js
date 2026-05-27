@@ -19,7 +19,9 @@ export function renderList(translations) {
         <p class="text-sm font-semibold text-stone-800 dark:text-stone-100 truncate pr-6">${esc(t.titre)}</p>
         <p class="text-xs text-stone-500 dark:text-stone-300 truncate">${esc(t.auteur)}</p>
         <div class="flex items-center gap-2 mt-1.5">
-          <span class="text-xs font-semibold px-2 py-0.5 rounded-full ${badge}">${s.label}</span>
+          ${s.cls === 'done' && t.page_count
+            ? `<span class="text-xs text-stone-400">${t.page_count} p.</span>`
+            : `<span class="text-xs font-semibold px-2 py-0.5 rounded-full ${badge}">${s.label}</span>`}
           <span class="text-xs text-stone-400">${formatDate(t.created_at)}</span>
         </div>
         ${s.cls === 'processing' && s.pct > 0 ? `

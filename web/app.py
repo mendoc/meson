@@ -260,7 +260,10 @@ def _recompile_pipeline(tid: int, titre: str, auteur: str,
                   for p in pages_data]
         pdf = composer.assemble(pages, titre=titre, auteur=auteur,
                                 police=police, theme=theme, tid=tid)
-        update(tid, status="done", output_name=pdf.name)
+        import fitz as _fitz
+        with _fitz.open(str(pdf)) as _doc:
+            output_pages = _doc.page_count
+        update(tid, status="done", output_name=pdf.name, page_count=output_pages)
     except Exception as exc:
         update(tid, status="error", error=str(exc))
 
@@ -329,7 +332,10 @@ def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
             update(tid, status=f"processing:{i + 1}/{range_size}")
 
         pdf = composer.assemble(pages, titre=titre, auteur=auteur, police=police, theme=theme, tid=tid)
-        update(tid, status="done", output_name=pdf.name)
+        import fitz as _fitz
+        with _fitz.open(str(pdf)) as _doc:
+            output_pages = _doc.page_count
+        update(tid, status="done", output_name=pdf.name, page_count=output_pages)
 
     except Exception as exc:
         update(tid, status="error", error=str(exc))
