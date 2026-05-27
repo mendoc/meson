@@ -10,6 +10,7 @@ IMAGES_DIR: Path = OUTPUT_DIR / "images"
 
 FONTS: dict[str, tuple[str, ...]] = {
     "eb_garamond": ("EB Garamond",  "Linux Libertine", "DejaVu Serif"),
+    "sabon":       ("Sabon",        "Linux Libertine", "DejaVu Serif"),
     "crimson_pro": ("Crimson Pro",  "Linux Libertine", "DejaVu Serif"),
     "lora":        ("Lora",         "Linux Libertine", "DejaVu Serif"),
 }
