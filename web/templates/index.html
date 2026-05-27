@@ -273,6 +273,28 @@
     </main>
   </div>
 
+  <!-- Modale de confirmation de suppression -->
+  <div id="modalDelete" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="modalDeleteBackdrop"></div>
+    <div class="relative bg-white dark:bg-stone-900 rounded-xl shadow-2xl border border-stone-200 dark:border-stone-700 p-7 flex flex-col gap-5 w-full max-w-sm mx-4">
+      <div class="flex flex-col gap-1">
+        <h3 class="font-serif text-lg font-normal text-stone-900 dark:text-stone-100">Supprimer la traduction</h3>
+        <p class="text-sm text-stone-500 dark:text-stone-400">Voulez-vous supprimer <span id="modalDeleteTitle" class="font-semibold text-stone-700 dark:text-stone-200"></span> ?</p>
+        <p class="text-xs text-stone-400 dark:text-stone-500 mt-1">Le PDF généré sera également supprimé. Cette action est irréversible.</p>
+      </div>
+      <div class="flex gap-3 justify-end pt-1">
+        <button id="modalDeleteCancel"
+          class="px-4 py-2 text-sm border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-600 dark:text-stone-300">
+          Annuler
+        </button>
+        <button id="modalDeleteConfirm"
+          class="px-4 py-2 text-sm font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm">
+          Supprimer
+        </button>
+      </div>
+    </div>
+  </div>
+
   <script src="/static/app.js"></script>
 </body>
 </html>

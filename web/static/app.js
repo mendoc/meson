@@ -110,9 +110,37 @@ function renderList(translations) {
   }).join('');
 }
 
-/* ── Suppression ─────────────────────────────────────────────────── */
+/* ── Modale de suppression ───────────────────────────────────────── */
+const $modalDelete   = document.getElementById('modalDelete');
+const $modalTitle    = document.getElementById('modalDeleteTitle');
+const $modalConfirm  = document.getElementById('modalDeleteConfirm');
+const $modalCancel   = document.getElementById('modalDeleteCancel');
+const $modalBackdrop = document.getElementById('modalDeleteBackdrop');
+
+let _deleteResolve = null;
+
+function _openDeleteModal(titre) {
+  $modalTitle.textContent = `« ${titre} »`;
+  $modalDelete.classList.remove('hidden');
+  $modalConfirm.focus();
+  return new Promise(resolve => { _deleteResolve = resolve; });
+}
+
+function _closeDeleteModal(confirmed) {
+  $modalDelete.classList.add('hidden');
+  if (_deleteResolve) { _deleteResolve(confirmed); _deleteResolve = null; }
+}
+
+$modalConfirm.addEventListener('click',  () => _closeDeleteModal(true));
+$modalCancel.addEventListener('click',   () => _closeDeleteModal(false));
+$modalBackdrop.addEventListener('click', () => _closeDeleteModal(false));
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && !$modalDelete.classList.contains('hidden')) _closeDeleteModal(false);
+});
+
 async function deleteTranslation(id, titre) {
-  if (!confirm(`Supprimer « ${titre} » ?\n\nLe PDF généré sera également supprimé.`)) return;
+  const confirmed = await _openDeleteModal(titre);
+  if (!confirmed) return;
   const res = await fetch(`/api/translations/${id}`, { method: 'DELETE' });
   if (!res.ok) { alert('Erreur lors de la suppression.'); return; }
   if (activeId === id) {
