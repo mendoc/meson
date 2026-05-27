@@ -1,4 +1,5 @@
 import re
+import time
 
 from models.page import PageContext
 
@@ -87,14 +88,31 @@ class LLMService:
 
     def compose(self, context: PageContext) -> str:
         """Envoie le contexte glissant au LLM et retourne le code Typst généré."""
+        import anthropic
         client = self._get_client()
-        response = client.messages.create(
-            model=self.model,
-            max_tokens=4096,
-            system=SYSTEM_PROMPT,
-            messages=[{"role": "user", "content": self._build_user_message(context)}],
-        )
-        return _strip_code_fences(response.content[0].text)
+        delays = [5, 15, 30, 60]
+        for attempt, delay in enumerate(delays + [None]):
+            try:
+                response = client.messages.create(
+                    model=self.model,
+                    max_tokens=4096,
+                    system=SYSTEM_PROMPT,
+                    messages=[{"role": "user", "content": self._build_user_message(context)}],
+                )
+                return _strip_code_fences(response.content[0].text)
+            except anthropic.InternalServerError as exc:
+                if delay is None:
+                    raise
+                print(f"  [RETRY] Page {context.page_number} — API surchargée ({exc.status_code}), "
+                      f"nouvelle tentative dans {delay}s (essai {attempt + 1}/{len(delays)})…")
+                time.sleep(delay)
+            except anthropic.RateLimitError as exc:
+                if delay is None:
+                    raise
+                wait = delay * 2
+                print(f"  [RETRY] Page {context.page_number} — Rate limit, "
+                      f"pause {wait}s (essai {attempt + 1}/{len(delays)})…")
+                time.sleep(wait)
 
     def _build_user_message(self, context: PageContext) -> str:
         return (
