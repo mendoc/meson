@@ -1,5 +1,11 @@
 import { parseStatus } from './utils.js';
 
+let _prevStatus  = '';
+let _currentPage = 1;
+let _currentTid  = null;
+
+export function setCurrentPage(n) { _currentPage = n; }
+
 const _panels = {
   upload:   document.getElementById('panelUpload'),
   progress: document.getElementById('panelProgress'),
@@ -25,63 +31,112 @@ const $viewerBar      = document.getElementById('viewerProgressBar');
 const $pdfFrame       = document.getElementById('pdfFrame');
 const $downloadBtn    = document.getElementById('downloadBtn');
 
+// Lit le numéro de page courant depuis le hash de l'iframe.
+// Chrome et Firefox mettent à jour le hash de l'iframe quand l'utilisateur
+// navigue dans le PDF (ex : #page=7).
+setInterval(() => {
+  try {
+    const hash = $pdfFrame.contentWindow?.location?.hash ?? '';
+    const m = hash.match(/#page=(\d+)/i);
+    if (m) _currentPage = parseInt(m[1], 10);
+  } catch {}
+}, 1500);
+
 export function updateActivePanel(t) {
   if (t.status === 'error') {
+    _prevStatus = 'error';
     showPanel('error');
     document.getElementById('errorText').textContent = t.error || 'Erreur inconnue.';
     return;
   }
 
+  // Réinitialise la page courante quand on change de traduction
+  if (t.id !== _currentTid) {
+    _currentPage = 1;
+    _currentTid  = t.id;
+  }
+
   if (t.status === 'done') {
-    _showViewer(t, false);
+    const wasRecompiling = _prevStatus === 'recompiling';
+    _prevStatus = 'done';
+    _showViewer(t, 'done', 0, 0, wasRecompiling);
     return;
   }
 
-  // processing:N/M avec N >= 1 — basculer sur le viewer avec le PDF partiel
+  if (t.status === 'recompiling') {
+    _prevStatus = 'recompiling';
+    _showViewer(t, 'recompiling');
+    return;
+  }
+
   const m = t.status.match(/^processing:(\d+)\/(\d+)$/);
   if (m && +m[1] >= 1) {
-    _showViewer(t, true, +m[1], +m[2]);
+    _prevStatus = 'processing';
+    _showViewer(t, 'processing', +m[1], +m[2]);
     return;
   }
 
-  // pending / processing sans numéro (initialisation, page 1 pas encore finie)
+  _prevStatus = 'pending';
   showPanel('progress');
   document.getElementById('progressTitle').textContent = `${t.titre} — ${t.auteur}`;
 }
 
-function _showViewer(t, processing, n = 0, total = 0) {
+function _showViewer(t, mode, n = 0, total = 0, forceReload = false) {
   showPanel('viewer');
   $viewerTitle.textContent = t.titre;
 
-  if (processing) {
-    $viewerStatus.textContent  = `En cours — Page ${n} / ${total}`;
-    $viewerStatus.className    = 'text-xs text-brand-600 mt-0.5';
+  const $btnRecompile   = document.getElementById('btnRecompile');
+  const $btnPages       = document.getElementById('btnPages');
+  const $recompilePanel = document.getElementById('recompilePanel');
+
+  if (mode === 'processing') {
+    $viewerStatus.textContent = `En cours — Page ${n} / ${total}`;
+    $viewerStatus.className   = 'text-xs text-brand-600 mt-0.5';
     $viewerSpinner.classList.remove('hidden');
     $viewerProgress.classList.remove('hidden');
-    $viewerBar.style.width     = Math.round(n / total * 100) + '%';
+    $viewerBar.style.width    = Math.round(n / total * 100) + '%';
     $downloadBtn.classList.add('hidden');
+    $btnRecompile?.classList.add('hidden');
+    $btnPages?.classList.add('hidden');
+    $recompilePanel?.classList.add('hidden');
 
-    // Recharger l'iframe uniquement quand un nouveau partiel est compilé
-    // (toutes les 5 pages, discriminant = Math.floor(N/5))
     const group = Math.floor(n / 5);
     const url   = `/api/output/${t.id}/partial?g=${group}`;
     if ($pdfFrame.dataset.partialUrl !== url) {
       $pdfFrame.dataset.partialUrl = url;
       $pdfFrame.src = url;
     }
+
+  } else if (mode === 'recompiling') {
+    $viewerStatus.textContent = 'Recompilation en cours…';
+    $viewerStatus.className   = 'text-xs text-brand-600 mt-0.5';
+    $viewerSpinner.classList.remove('hidden');
+    $viewerProgress.classList.remove('hidden');
+    $viewerBar.style.width    = '50%';
+    $downloadBtn.classList.add('hidden');
+    $btnRecompile?.classList.add('hidden');
+    $btnPages?.classList.add('hidden');
+    $recompilePanel?.classList.add('hidden');
+
   } else {
-    $viewerStatus.textContent  = 'Traduction terminée';
-    $viewerStatus.className    = 'text-xs text-stone-500 dark:text-stone-400 mt-0.5';
+    // done
+    $viewerStatus.textContent = 'Traduction terminée';
+    $viewerStatus.className   = 'text-xs text-stone-500 dark:text-stone-400 mt-0.5';
     $viewerSpinner.classList.add('hidden');
     $viewerProgress.classList.add('hidden');
     $downloadBtn.classList.remove('hidden');
+    $btnRecompile?.classList.remove('hidden');
+    $btnPages?.classList.remove('hidden');
 
-    const url = `/api/output/${t.id}`;
-    if (!$pdfFrame.src.endsWith(url) || $pdfFrame.dataset.partialUrl) {
-      $pdfFrame.src = url;
+    const baseUrl = `/api/output/${t.id}`;
+    const url     = baseUrl;
+
+    if (forceReload || !$pdfFrame.src.includes(baseUrl) || $pdfFrame.dataset.partialUrl) {
+      // Recharge le PDF en positionnant sur la page que l'utilisateur lisait
+      $pdfFrame.src = `${baseUrl}?v=${Date.now()}#page=${_currentPage}`;
       delete $pdfFrame.dataset.partialUrl;
     }
     $downloadBtn.href     = url;
-    $downloadBtn.download = t.titre + '.pdf';
+    $downloadBtn.download = `${t.titre}.pdf`;
   }
 }

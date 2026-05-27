@@ -1,6 +1,7 @@
 import './modules/theme.js';
 import './modules/upload.js';
 import './modules/settings.js';
+import './modules/recompile.js';
 import { loadList } from './modules/sidebar.js';
 import { selectItem } from './modules/poll.js';
 import { deleteTranslation } from './modules/modal.js';

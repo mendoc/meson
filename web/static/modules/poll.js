@@ -10,7 +10,8 @@ export function schedulePoll() {
       const active = data.find(t => t.id === state.activeId);
       if (active) updateActivePanel(active);
     }
-    const busy = data.some(t => t.status === 'pending' || t.status.startsWith('processing'));
+    const busy = data.some(t =>
+      t.status === 'pending' || t.status === 'recompiling' || t.status.startsWith('processing'));
     if (!busy) { clearInterval(state.pollTimer); state.pollTimer = null; }
   }, 3000);
 }

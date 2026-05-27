@@ -103,6 +103,15 @@ Les items sont classés par ordre décroissant d'importance.
 - Extraire les titres de chapitres depuis l'OCR ou les signets PDF
 - Générer un bloc `outline()` Typst en début de document
 
+### 13. Décalage entre numéros de page PDF et pages sources dans l'éditeur
+- Les gabarits (O'Reilly, Standard) injectent des pages de structure (couverture, disclaimer,
+  page de garde…) avant le contenu traduit, créant un décalage entre le numéro affiché dans
+  le visualiseur PDF et l'index stocké en base
+- Trouver le décalage exact (ex : compter les pages de gabarit avant le contenu) et l'exposer
+  via l'API (`GET /api/translations/{id}` ou route dédiée)
+- Dans la modale d'édition, afficher un avertissement ou convertir automatiquement le numéro
+  saisi (page PDF → index source)
+
 ### 12. Créer un logo
 - Design minimaliste cohérent avec l'identité visuelle (stone/indigo)
 - Formats SVG + PNG pour usage dans l'UI et la page de garde

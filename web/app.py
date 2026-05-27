@@ -13,7 +13,7 @@ from fastapi.staticfiles import StaticFiles
 from fastapi.templating import Jinja2Templates
 
 from web.db import (create, delete, delete_pages, get, get_setting, init_db,
-                    insert_page, list_all, list_pages, set_setting, update)
+                    insert_page, list_all, list_pages, set_setting, update, update_page)
 
 HERE = Path(__file__).parent
 app = FastAPI(title="Méson")
@@ -198,6 +198,32 @@ async def api_pages(tid: int):
     return list_pages(tid)
 
 
+@app.put("/api/translations/{tid}/pages/{page_number}")
+async def api_update_page(tid: int, page_number: int, body: dict = Body(...)):
+    if not get(tid):
+        raise HTTPException(404)
+    typst_code = body.get("typst_code", "")
+    if not update_page(tid, page_number, typst_code):
+        raise HTTPException(404, detail="Page introuvable.")
+    return {"ok": True}
+
+
+@app.post("/api/translations/{tid}/recompile")
+async def api_recompile(tid: int, background_tasks: BackgroundTasks, body: dict = Body(default={})):
+    t = get(tid)
+    if not t:
+        raise HTTPException(404)
+    pages = list_pages(tid)
+    if not pages:
+        raise HTTPException(400, detail="Aucune page stockée pour cette traduction.")
+    police_slug = body.get("police", t["police"])
+    theme_slug  = body.get("theme",  t["theme"])
+    update(tid, status="recompiling", police=police_slug, theme=theme_slug)
+    background_tasks.add_task(_recompile_pipeline, tid, t["titre"], t["auteur"],
+                               police_slug, theme_slug, pages)
+    return {"ok": True}
+
+
 @app.get("/api/output/{tid}/partial")
 async def api_output_partial(tid: int):
     pdf = OUTPUT_DIR / f"{tid}__partial.pdf"
@@ -216,6 +242,26 @@ async def api_output(tid: int):
         raise HTTPException(404)
     return FileResponse(pdf, media_type="application/pdf",
                         filename=pdf.name, content_disposition_type="inline")
+
+
+def _recompile_pipeline(tid: int, titre: str, auteur: str,
+                        police_slug: str, theme_slug: str,
+                        pages_data: list[dict]) -> None:
+    try:
+        import config
+        from agents.typst_composer import TypstComposer
+        from models.page import TranslatedPage
+
+        composer = TypstComposer(ROOT / "template.typ", OUTPUT_DIR)
+        police = config.FONTS.get(police_slug, config.FONTS[config.DEFAULT_FONT])
+        theme  = config.THEMES.get(theme_slug,  config.THEMES[config.DEFAULT_THEME])
+        pages  = [TranslatedPage(page_number=p["page_number"], typst_code=p["typst_code"])
+                  for p in pages_data]
+        pdf = composer.assemble(pages, titre=titre, auteur=auteur,
+                                police=police, theme=theme, tid=tid)
+        update(tid, status="done", output_name=pdf.name)
+    except Exception as exc:
+        update(tid, status="error", error=str(exc))
 
 
 _PARTIAL_EVERY = 5  # compile un PDF partiel toutes les N pages

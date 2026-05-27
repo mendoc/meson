@@ -126,6 +126,15 @@ def list_pages(tid: int) -> list[dict]:
         return [dict(r) for r in rows]
 
 
+def update_page(tid: int, page_number: int, typst_code: str) -> bool:
+    with _conn() as db:
+        cur = db.execute(
+            "UPDATE translation_pages SET typst_code = ? WHERE translation_id = ? AND page_number = ?",
+            (typst_code, tid, page_number),
+        )
+        return cur.rowcount > 0
+
+
 def delete_pages(tid: int) -> None:
     with _conn() as db:
         db.execute("DELETE FROM translation_pages WHERE translation_id = ?", (tid,))

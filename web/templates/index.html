@@ -198,14 +198,47 @@
               <p id="viewerStatusText" class="text-xs text-stone-500 dark:text-stone-400 mt-0.5">Traduction terminée</p>
             </div>
           </div>
-          <a id="downloadBtn" href="#"
-            class="flex-shrink-0 px-4 py-2 text-sm font-semibold border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 hover:border-stone-400 dark:hover:border-stone-500 transition-colors text-stone-700 dark:text-stone-300 no-underline shadow-sm">
-            ↓ Télécharger
-          </a>
+          <div class="flex items-center gap-2 flex-shrink-0">
+            <button id="btnPages" class="hidden px-3 py-2 text-xs font-semibold border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-600 dark:text-stone-300"
+              title="Éditer une page">Pages</button>
+            <button id="btnRecompile" class="hidden px-3 py-2 text-xs font-semibold border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-600 dark:text-stone-300"
+              title="Recompiler avec d'autres paramètres">Recompiler</button>
+            <a id="downloadBtn" href="#"
+              class="px-4 py-2 text-sm font-semibold border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 hover:border-stone-400 dark:hover:border-stone-500 transition-colors text-stone-700 dark:text-stone-300 no-underline shadow-sm">
+              Télécharger
+            </a>
+          </div>
         </div>
         <!-- Barre de progression fine (visible pendant le traitement) -->
         <div id="viewerProgressContainer" class="hidden h-1 bg-stone-200 dark:bg-stone-700 flex-shrink-0">
           <div id="viewerProgressBar" class="h-full bg-brand-600 transition-all duration-500" style="width:0%"></div>
+        </div>
+        <!-- Panneau recompilation (dépliable via bouton ⚙) -->
+        <div id="recompilePanel" class="hidden flex-shrink-0 px-6 py-3 bg-stone-50 dark:bg-stone-800 border-b border-stone-200 dark:border-stone-700 flex items-center gap-4 flex-wrap">
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wide">Police</label>
+            <select id="recompilePolice"
+              class="px-2 py-1.5 rounded-lg border-2 border-stone-300 dark:border-stone-600 text-sm text-stone-800 dark:text-stone-100 bg-white dark:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-brand-600 transition">
+              <option value="crimson_pro">Crimson Pro</option>
+              <option value="lora">Lora</option>
+              <option value="eb_garamond">EB Garamond</option>
+              <option value="sabon">Sabon</option>
+              <option value="minion_pro">Minion Pro</option>
+            </select>
+          </div>
+          <div class="flex items-center gap-2">
+            <label class="text-xs font-bold text-stone-500 dark:text-stone-400 uppercase tracking-wide">Gabarit</label>
+            <select id="recompileTheme"
+              class="px-2 py-1.5 rounded-lg border-2 border-stone-300 dark:border-stone-600 text-sm text-stone-800 dark:text-stone-100 bg-white dark:bg-stone-700 focus:outline-none focus:ring-2 focus:ring-brand-600 transition">
+              <option value="standard">Standard — Roman littéraire A5</option>
+              <option value="oreilly">O'Reilly — Technique avec en-têtes</option>
+            </select>
+          </div>
+          <button id="recompileSubmit"
+            class="px-4 py-1.5 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors shadow-sm">
+            Lancer la recompilation
+          </button>
+          <p id="recompileError" class="hidden text-xs text-red-500"></p>
         </div>
         <iframe id="pdfFrame" class="flex-1 w-full border-0" src="about:blank"></iframe>
       </div>
@@ -306,6 +339,45 @@
           class="px-4 py-2 text-sm font-semibold bg-red-600 text-white rounded-lg hover:bg-red-700 transition-colors shadow-sm">
           Supprimer
         </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Modale d'édition de page Typst -->
+  <div id="modalPageEditor" class="hidden fixed inset-0 z-50 flex items-center justify-center">
+    <div class="absolute inset-0 bg-black/50 backdrop-blur-sm" id="modalPageEditorBackdrop"></div>
+    <div class="relative bg-white dark:bg-stone-900 rounded-xl shadow-2xl border border-stone-200 dark:border-stone-700 flex flex-col w-full max-w-3xl h-3/4 mx-4">
+      <div class="flex items-center justify-between px-5 py-3 border-b border-stone-200 dark:border-stone-700 flex-shrink-0">
+        <h3 class="font-serif text-lg font-normal text-stone-900 dark:text-stone-100">Éditer une page</h3>
+        <div class="flex items-center gap-3">
+          <div class="flex items-center gap-2">
+            <label class="text-xs text-stone-500 dark:text-stone-400">Page n°</label>
+            <input id="editorPageInput" type="number" min="0" step="1"
+              class="w-20 px-2 py-1 rounded-lg border-2 border-stone-300 dark:border-stone-600 text-sm text-stone-800 dark:text-stone-100 bg-stone-50 dark:bg-stone-800 focus:outline-none focus:ring-2 focus:ring-brand-600 transition font-mono">
+            <button id="editorLoadBtn"
+              class="px-3 py-1 text-xs font-semibold border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-600 dark:text-stone-300">
+              Charger
+            </button>
+          </div>
+          <button id="modalPageEditorClose"
+            class="w-7 h-7 rounded-md flex items-center justify-center text-stone-400 hover:text-stone-700 dark:hover:text-stone-200 hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-lg leading-none">✕</button>
+        </div>
+      </div>
+      <textarea id="editorCode" spellcheck="false"
+        class="flex-1 font-mono text-xs p-4 resize-none bg-stone-50 dark:bg-stone-950 text-stone-800 dark:text-stone-100 focus:outline-none placeholder-stone-400 dark:placeholder-stone-600"
+        placeholder="Chargez une page pour voir son code Typst…"></textarea>
+      <div class="flex items-center justify-between px-5 py-3 border-t border-stone-200 dark:border-stone-700 flex-shrink-0">
+        <p id="editorStatus" class="text-xs text-stone-400 dark:text-stone-500"></p>
+        <div class="flex gap-3">
+          <button id="editorSaveBtn" disabled
+            class="px-4 py-2 text-sm border-2 border-stone-300 dark:border-stone-600 rounded-lg hover:bg-stone-100 dark:hover:bg-stone-800 transition-colors text-stone-600 dark:text-stone-300 disabled:opacity-40">
+            Enregistrer
+          </button>
+          <button id="editorSaveRecompileBtn" disabled
+            class="px-4 py-2 bg-brand-600 text-white text-sm font-semibold rounded-lg hover:bg-brand-700 transition-colors shadow-sm disabled:opacity-40">
+            Enregistrer et recompiler
+          </button>
+        </div>
       </div>
     </div>
   </div>

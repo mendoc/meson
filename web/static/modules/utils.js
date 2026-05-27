@@ -1,7 +1,8 @@
 export function parseStatus(status) {
-  if (status === 'pending') return { label: 'En attente',  cls: 'pending',    pct: 0 };
-  if (status === 'done')    return { label: 'Terminé',     cls: 'done',       pct: 100 };
-  if (status === 'error')   return { label: 'Erreur',      cls: 'error',      pct: 0 };
+  if (status === 'pending')     return { label: 'En attente',      cls: 'pending',    pct: 0 };
+  if (status === 'done')        return { label: 'Terminé',         cls: 'done',       pct: 100 };
+  if (status === 'error')       return { label: 'Erreur',          cls: 'error',      pct: 0 };
+  if (status === 'recompiling') return { label: 'Recompilation…',  cls: 'processing', pct: 50 };
   const m = status.match(/^processing:(\d+)\/(\d+)$/);
   if (m) {
     const pct = Math.round((+m[1] / +m[2]) * 100);
