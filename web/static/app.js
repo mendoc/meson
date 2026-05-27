@@ -15,6 +15,7 @@ const $chosenFile = document.getElementById('chosenFile');
 const $titre      = document.getElementById('titre');
 const $auteur     = document.getElementById('auteur');
 const $police     = document.getElementById('police');
+const $theme      = document.getElementById('theme');
 const $submitBtn  = document.getElementById('submitBtn');
 const $retryBtn   = document.getElementById('retryBtn');
 
@@ -193,6 +194,7 @@ $submitBtn.addEventListener('click', async () => {
   form.append('titre',  $titre.value.trim());
   form.append('auteur', $auteur.value.trim());
   form.append('police', $police.value);
+  form.append('theme',  $theme.value);
   $submitBtn.disabled = true;
 
   const res = await fetch('/api/translate', { method: 'POST', body: form });
@@ -207,6 +209,7 @@ $submitBtn.addEventListener('click', async () => {
   $titre.value = '';
   $auteur.value = '';
   $police.value = 'crimson_pro';
+  $theme.value  = 'standard';
   $dropIdle.classList.remove('hidden');
   $dropReady.classList.add('hidden');
   $dropReady.classList.remove('flex');

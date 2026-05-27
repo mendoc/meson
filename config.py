@@ -14,3 +14,17 @@ FONTS: dict[str, tuple[str, ...]] = {
     "lora":         ("Lora",         "Linux Libertine", "DejaVu Serif"),
 }
 DEFAULT_FONT: str = "crimson_pro"
+
+THEMES: dict[str, dict] = {
+    "standard": {
+        "file": "gabarit_standard",
+        "fn":   "gabarit-standard",
+        "label": "Standard — Roman littéraire A5",
+    },
+    "oreilly": {
+        "file": "gabarit_oreilly",
+        "fn":   "gabarit-oreilly",
+        "label": "O'Reilly — Technique avec en-têtes courants",
+    },
+}
+DEFAULT_THEME: str = "standard"

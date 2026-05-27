@@ -54,12 +54,13 @@ async def api_translate(
     titre: str = Form(...),
     auteur: str = Form(...),
     police: str = Form("crimson_pro"),
+    theme: str = Form("standard"),
 ):
     dest = UPLOADS_DIR / file.filename
     with dest.open("wb") as f:
         shutil.copyfileobj(file.file, f)
-    tid = create(titre, auteur, file.filename, police)
-    background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police)
+    tid = create(titre, auteur, file.filename, police, theme)
+    background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police, theme)
     return {"id": tid}
 
 
@@ -74,7 +75,8 @@ async def api_output(tid: int):
     return FileResponse(pdf, media_type="application/pdf", filename=pdf.name)
 
 
-def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str, police_slug: str = "crimson_pro") -> None:
+def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
+                  police_slug: str = "crimson_pro", theme_slug: str = "standard") -> None:
     try:
         import config
         from agents.image_extractor import ImageExtractor
@@ -108,7 +110,8 @@ def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str, police_sl
             update(tid, status=f"processing:{n + 1}/{total}")
 
         police = config.FONTS.get(police_slug, config.FONTS[config.DEFAULT_FONT])
-        pdf = composer.assemble(pages, titre=titre, auteur=auteur, police=police)
+        theme  = config.THEMES.get(theme_slug, config.THEMES[config.DEFAULT_THEME])
+        pdf = composer.assemble(pages, titre=titre, auteur=auteur, police=police, theme=theme)
         update(tid, status="done", output_name=pdf.name)
 
     except Exception as exc:

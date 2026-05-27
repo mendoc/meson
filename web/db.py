@@ -19,11 +19,16 @@ def init_db() -> None:
                 page_count   INTEGER,
                 created_at   TEXT    NOT NULL,
                 error        TEXT,
-                police       TEXT    NOT NULL DEFAULT 'crimson_pro'
+                police       TEXT    NOT NULL DEFAULT 'crimson_pro',
+                theme        TEXT    NOT NULL DEFAULT 'standard'
             )
         """)
         try:
             db.execute("ALTER TABLE translations ADD COLUMN police TEXT NOT NULL DEFAULT 'crimson_pro'")
+        except Exception:
+            pass
+        try:
+            db.execute("ALTER TABLE translations ADD COLUMN theme TEXT NOT NULL DEFAULT 'standard'")
         except Exception:
             pass
 
@@ -39,11 +44,12 @@ def _conn():
         db.close()
 
 
-def create(titre: str, auteur: str, source_name: str, police: str = "crimson_pro") -> int:
+def create(titre: str, auteur: str, source_name: str,
+           police: str = "crimson_pro", theme: str = "standard") -> int:
     with _conn() as db:
         cur = db.execute(
-            "INSERT INTO translations (titre, auteur, source_name, police, created_at) VALUES (?, ?, ?, ?, ?)",
-            (titre, auteur, source_name, police, datetime.now().isoformat(timespec="seconds")),
+            "INSERT INTO translations (titre, auteur, source_name, police, theme, created_at) VALUES (?, ?, ?, ?, ?, ?)",
+            (titre, auteur, source_name, police, theme, datetime.now().isoformat(timespec="seconds")),
         )
         return cur.lastrowid
 

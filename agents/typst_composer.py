@@ -15,16 +15,24 @@ class TypstComposer:
         self.output_dir = output_dir
 
     def assemble(self, pages: list[TranslatedPage], titre: str, auteur: str,
-                 police: tuple[str, ...] = ("Crimson Pro", "Linux Libertine", "DejaVu Serif")) -> Path:
+                 police: tuple[str, ...] = ("Crimson Pro", "Linux Libertine", "DejaVu Serif"),
+                 theme: dict | None = None) -> Path:
         """Génère le fichier .typ final encapsulé dans le gabarit, puis compile."""
+        if theme is None:
+            theme = {"file": "gabarit_standard", "fn": "gabarit-standard"}
+
         body = "\n\n".join(p.typst_code for p in pages)
-        slug = "".join(c if c.isalnum() or c == "_" else "_" for c in titre.lower())[:40]
+        title_slug = "".join(c if c.isalnum() or c == "_" else "_" for c in titre.lower())[:35]
+        theme_slug = theme["file"].replace("gabarit_", "")
+        slug = f"{title_slug}__{theme_slug}"
         typ_file = self.output_dir / f"{slug}.typ"
 
         font_typst = "(" + ", ".join(f'"{f}"' for f in police) + ")"
+        theme_file = theme["file"]
+        theme_fn   = theme["fn"]
         header = (
-            f'#import "/template.typ": projet-meson\n'
-            f'#show: projet-meson.with(titre: "{titre}", auteur: "{auteur}", police: {font_typst})\n\n'
+            f'#import "/themes/{theme_file}.typ": {theme_fn}\n'
+            f'#show: {theme_fn}.with(titre: "{titre}", auteur: "{auteur}", police: {font_typst})\n\n'
         )
         typ_file.write_text(header + body, encoding="utf-8")
         return self._compile(typ_file)
