@@ -3,6 +3,7 @@
   auteur: "Nom de l'Auteur",
   police: ("Crimson Pro", "Linux Libertine", "DejaVu Serif"),
   couverture: false,
+  toc: false,
   body
 ) = {
   // 1. GÉOMÉTRIE DE LA PAGE
@@ -122,6 +123,15 @@
     // Reset à 0 ici : Typst incrémente à la coupure de page, donc la 1ère page du corps = 1.
     #counter(page).update(0)
   ]
+
+  if toc {
+    page(header: none, numbering: none)[
+      #set par(first-line-indent: 0pt)
+      #text(font: ("Lora", "DejaVu Serif"), size: 16pt, weight: "bold", fill: rgb("#1a202c"))[Table des matières]
+      #v(1.5em)
+      #outline(title: none, indent: 1em, depth: 3)
+    ]
+  }
 
   body
 }

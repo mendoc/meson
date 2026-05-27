@@ -19,7 +19,8 @@ class TypstComposer:
                  theme: dict | None = None,
                  tid: int | None = None,
                  partial: bool = False,
-                 couverture: bool = False) -> Path:
+                 couverture: bool = False,
+                 toc: bool = False) -> Path:
         """Génère le fichier .typ encapsulé dans le gabarit, puis compile.
 
         Si partial=True, le fichier est nommé {tid}__partial.{typ,pdf} et
@@ -43,9 +44,10 @@ class TypstComposer:
         theme_file = theme["file"]
         theme_fn   = theme["fn"]
         couverture_typst = "true" if couverture else "false"
+        toc_typst        = "true" if toc else "false"
         header = (
             f'#import "/themes/{theme_file}.typ": {theme_fn}\n'
-            f'#show: {theme_fn}.with(titre: "{titre}", auteur: "{auteur}", police: {font_typst}, couverture: {couverture_typst})\n\n'
+            f'#show: {theme_fn}.with(titre: "{titre}", auteur: "{auteur}", police: {font_typst}, couverture: {couverture_typst}, toc: {toc_typst})\n\n'
         )
         typ_file.write_text(header + body, encoding="utf-8")
         return self._compile(typ_file)

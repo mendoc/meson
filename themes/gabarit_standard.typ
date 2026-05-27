@@ -3,6 +3,7 @@
   auteur: "Nom de l'Auteur",
   police: ("Crimson Pro", "Linux Libertine", "DejaVu Serif"),
   couverture: false,
+  toc: false,
   body
 ) = {
   set page(
@@ -66,6 +67,15 @@
     // Reset à 0 ici : Typst incrémente à la coupure de page, donc la 1ère page du corps = 1.
     #counter(page).update(0)
   ]
+
+  if toc {
+    page(numbering: none)[
+      #set par(first-line-indent: 0pt)
+      #text(font: police, size: 16pt, weight: "bold")[Table des matières]
+      #v(1.5em)
+      #outline(title: none, indent: 1em, depth: 3)
+    ]
+  }
 
   body
 }

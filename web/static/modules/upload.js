@@ -18,6 +18,7 @@ const $pageRange     = document.getElementById('pageRange');
 const $pageRangeHint = document.getElementById('pageRangeHint');
 const $promptCustom  = document.getElementById('promptCustom');
 const $couverture    = document.getElementById('couverture');
+const $toc           = document.getElementById('toc');
 const $submitBtn     = document.getElementById('submitBtn');
 
 function _validateRange(str) {
@@ -97,6 +98,7 @@ function _savePrefs() {
     theme:        $theme.value,
     promptCustom: $promptCustom.value.trim(),
     couverture:   $couverture.checked,
+    toc:          $toc.checked,
   }));
 }
 
@@ -106,7 +108,8 @@ function _loadPrefs() {
     if (p.police)              $police.value      = p.police;
     if (p.theme)               $theme.value       = p.theme;
     if (p.promptCustom)        $promptCustom.value = p.promptCustom;
-    if (p.couverture != null)  $couverture.checked = p.couverture;
+    $couverture.checked = p.couverture != null ? p.couverture : true;
+    $toc.checked        = p.toc        != null ? p.toc        : true;
   } catch {}
 }
 
@@ -124,6 +127,7 @@ $submitBtn.addEventListener('click', async () => {
   form.append('page_range',    $pageRange.value.trim());
   form.append('prompt_custom', $promptCustom.value.trim());
   form.append('couverture',    $couverture.checked ? 'true' : 'false');
+  form.append('toc',           $toc.checked        ? 'true' : 'false');
   $submitBtn.disabled = true;
 
   const res = await fetch('/api/translate', { method: 'POST', body: form });

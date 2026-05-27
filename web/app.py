@@ -160,13 +160,14 @@ async def api_translate(
     page_range: str = Form(""),
     prompt_custom: str = Form(""),
     couverture: bool = Form(False),
+    toc: bool = Form(False),
 ):
     dest = UPLOADS_DIR / file.filename
     with dest.open("wb") as f:
         shutil.copyfileobj(file.file, f)
     model_used = get_setting("model", "") or config.LLM_MODEL
-    tid = create(titre, auteur, file.filename, police, theme, page_range or None, prompt_custom.strip() or None, model_used, couverture)
-    background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police, theme, page_range, prompt_custom.strip(), couverture)
+    tid = create(titre, auteur, file.filename, police, theme, page_range or None, prompt_custom.strip() or None, model_used, couverture, toc)
+    background_tasks.add_task(_run_pipeline, tid, dest, titre, auteur, police, theme, page_range, prompt_custom.strip(), couverture, toc)
     return {"id": tid}
 
 
@@ -221,9 +222,11 @@ async def api_recompile(tid: int, background_tasks: BackgroundTasks, body: dict 
     police_slug = body.get("police", t["police"])
     theme_slug  = body.get("theme",  t["theme"])
     couverture  = bool(body.get("couverture", t.get("couverture", 0)))
-    update(tid, status="recompiling", police=police_slug, theme=theme_slug, couverture=1 if couverture else 0)
+    toc         = bool(body.get("toc",        t.get("toc", 0)))
+    update(tid, status="recompiling", police=police_slug, theme=theme_slug,
+           couverture=1 if couverture else 0, toc=1 if toc else 0)
     background_tasks.add_task(_recompile_pipeline, tid, t["titre"], t["auteur"],
-                               police_slug, theme_slug, pages, couverture)
+                               police_slug, theme_slug, pages, couverture, toc)
     return {"ok": True}
 
 
@@ -250,7 +253,8 @@ async def api_output(tid: int):
 def _recompile_pipeline(tid: int, titre: str, auteur: str,
                         police_slug: str, theme_slug: str,
                         pages_data: list[dict],
-                        couverture: bool = False) -> None:
+                        couverture: bool = False,
+                        toc: bool = False) -> None:
     try:
         import config
         from agents.typst_composer import TypstComposer
@@ -262,7 +266,7 @@ def _recompile_pipeline(tid: int, titre: str, auteur: str,
         pages  = [TranslatedPage(page_number=p["page_number"], typst_code=p["typst_code"])
                   for p in pages_data]
         pdf = composer.assemble(pages, titre=titre, auteur=auteur,
-                                police=police, theme=theme, tid=tid, couverture=couverture)
+                                police=police, theme=theme, tid=tid, couverture=couverture, toc=toc)
         import fitz as _fitz
         with _fitz.open(str(pdf)) as _doc:
             output_pages = _doc.page_count
@@ -277,7 +281,7 @@ _PARTIAL_EVERY = 5  # compile un PDF partiel toutes les N pages
 def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
                   police_slug: str = "crimson_pro", theme_slug: str = "standard",
                   page_range: str = "", prompt_custom: str = "",
-                  couverture: bool = False) -> None:
+                  couverture: bool = False, toc: bool = False) -> None:
     try:
         import config
         from agents.image_extractor import ImageExtractor
@@ -346,7 +350,7 @@ def _run_pipeline(tid: int, source_pdf: Path, titre: str, auteur: str,
             update(tid, status=f"processing:{i + 1}/{range_size}")
 
         pdf = composer.assemble(pages, titre=titre, auteur=auteur, police=police, theme=theme,
-                                tid=tid, couverture=couverture)
+                                tid=tid, couverture=couverture, toc=toc)
         import fitz as _fitz
         with _fitz.open(str(pdf)) as _doc:
             output_pages = _doc.page_count

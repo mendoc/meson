@@ -34,6 +34,7 @@ const $recompilePanel      = document.getElementById('recompilePanel');
 const $recompilePolice     = document.getElementById('recompilePolice');
 const $recompileTheme      = document.getElementById('recompileTheme');
 const $recompileCouverture = document.getElementById('recompileCouverture');
+const $recompileToc        = document.getElementById('recompileToc');
 const $recompileSubmit     = document.getElementById('recompileSubmit');
 const $recompileError      = document.getElementById('recompileError');
 
@@ -50,6 +51,7 @@ async function _syncCurrentParams() {
   $recompilePolice.value     = t.police    || 'crimson_pro';
   $recompileTheme.value      = t.theme     || 'standard';
   $recompileCouverture.checked = Boolean(t.couverture);
+  $recompileToc.checked        = Boolean(t.toc);
 }
 
 $recompileSubmit.addEventListener('click', async () => {
@@ -61,7 +63,7 @@ $recompileSubmit.addEventListener('click', async () => {
   const res = await fetch(`/api/translations/${state.activeId}/recompile`, {
     method:  'POST',
     headers: { 'Content-Type': 'application/json' },
-    body:    JSON.stringify({ police: $recompilePolice.value, theme: $recompileTheme.value, couverture: $recompileCouverture.checked }),
+    body:    JSON.stringify({ police: $recompilePolice.value, theme: $recompileTheme.value, couverture: $recompileCouverture.checked, toc: $recompileToc.checked }),
   });
 
   $recompileSubmit.disabled    = false;
